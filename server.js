@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { GoogleGenAI, Type } from '@google/genai';
+import { registerPaymentRoutes } from './payment.js';
 
 const PORT = process.env.PORT || 3001;
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
@@ -353,6 +354,8 @@ async function generateCalendarAnalysis(lang, highImpactEvents) {
 app.get('/', (req, res) => {
   res.json({ ok: true, service: 'genztrader-news-api' });
 });
+
+registerPaymentRoutes(app);
 
 app.get('/api/calendar', async (req, res) => {
   if (!FINNHUB_API_KEY) {

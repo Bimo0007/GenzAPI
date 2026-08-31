@@ -9,8 +9,11 @@
   },
   "dependencies": {
     "@google/genai": "^1.52.0",
+    "bakong-khqr": "^1.0.20",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "firebase-admin": "^14.3.0",
+    "qrcode": "^1.5.4"
   }
 }
