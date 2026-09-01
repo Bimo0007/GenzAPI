@@ -52,14 +52,12 @@ async function sendResetLinkEmail(email, token) {
       template_id: EMAILJS_TEMPLATE_ID,
       user_id: EMAILJS_PUBLIC_KEY,
       accessToken: EMAILJS_PRIVATE_KEY || undefined,
+      // This EmailJS template (a dedicated "Reset your password" one, not
+      // the signup OTP template) binds its button to {{link}} — confirmed
+      // straight from the template editor's Content tab.
       template_params: {
         email,
-        // Reuses the same template as the signup OTP email (its {{passcode}}
-        // slot) — most email clients (Gmail included) auto-linkify a raw
-        // URL in the rendered text, so this still shows as a clickable
-        // link even though the template wasn't built specifically for one.
-        passcode: link,
-        time: new Date(Date.now() + TOKEN_TTL_MS).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        link,
       },
     }),
   });
