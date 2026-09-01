@@ -71,10 +71,14 @@ export function registerPasswordResetRoutes(app) {
       const code = generateCode();
       pending.set(email, { code, expiresAt: Date.now() + CODE_TTL_MS, attempts: 0, uid: userRecord.uid });
       await sendCodeEmail(email, code);
-    } catch {
-      // No account with this email, or the send failed — deliberately
-      // silent (see the enumeration note above); the confirm step below
-      // will just report "invalid or expired code" either way.
+    } catch (err) {
+      // Still silent to the CALLER (see the enumeration note above) — but
+      // logged server-side so a real send failure (bad EmailJS config,
+      // wrong template params, etc.) is visible in Railway's logs instead
+      // of vanishing. auth/user-not-found is the expected/silent case.
+      if (err.code !== 'auth/user-not-found') {
+        console.error('password-reset/request failed for a known account:', err.message || err);
+      }
     }
     res.json({ ok: true });
   });
