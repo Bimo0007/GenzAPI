@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { GoogleGenAI, Type } from '@google/genai';
 import { registerPaymentRoutes } from './payment.js';
 
@@ -49,6 +50,14 @@ app.use(
   })
 );
 app.use(express.json());
+
+// Every request here costs either a paid third-party API call (Gemini,
+// NewsAPI, Finnhub) or writes to Firestore — without a cap, a script could
+// burn through daily quotas or hammer the payment-grant endpoint. Generous
+// enough for normal browsing, tight enough to blunt scripted abuse.
+const generalLimiter = rateLimit({ windowMs: 60 * 1000, limit: 60, standardHeaders: true, legacyHeaders: false });
+const costlyLimiter = rateLimit({ windowMs: 60 * 1000, limit: 12, standardHeaders: true, legacyHeaders: false });
+app.use(generalLimiter);
 
 // Articles about gold/silver specifically as a market/price (not the word
 // "gold"/"silver" used loosely, e.g. "digital gold" for Bitcoin, "silver
@@ -355,6 +364,7 @@ app.get('/', (req, res) => {
   res.json({ ok: true, service: 'genztrader-news-api' });
 });
 
+app.use('/api/payment', costlyLimiter);
 registerPaymentRoutes(app);
 
 app.get('/api/calendar', async (req, res) => {
@@ -387,7 +397,7 @@ app.get('/api/calendar', async (req, res) => {
   }
 });
 
-app.post('/api/news/analyze', async (req, res) => {
+app.post('/api/news/analyze', costlyLimiter, async (req, res) => {
   if (!genai) {
     return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
   }

@@ -14,7 +14,7 @@
 // production; sandbox testing is unaffected.
 import pkg from 'bakong-khqr';
 import QRCode from 'qrcode';
-import { adminDb, firebaseAdminReady } from './firebaseAdmin.js';
+import { adminDb, firebaseAdminReady, verifyIdToken } from './firebaseAdmin.js';
 
 const { BakongKHQR, khqrData, IndividualInfo } = pkg;
 
@@ -80,22 +80,44 @@ async function grantAccess(uid) {
   return expiresAt;
 }
 
+// Pulls the caller's uid out of a verified Firebase ID token instead of
+// trusting a `uid` field in the request body — a bare uid in JSON is just a
+// string anyone can type in, so without this a caller could grant/check
+// payment access for an account that isn't theirs. Sends the 401 response
+// itself on failure; callers should return immediately when this resolves
+// to null.
+async function requireUid(req, res) {
+  const header = req.headers.authorization || '';
+  const idToken = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!idToken) {
+    res.status(401).json({ error: 'Missing Authorization bearer token.' });
+    return null;
+  }
+  try {
+    return await verifyIdToken(idToken);
+  } catch {
+    res.status(401).json({ error: 'Invalid or expired auth token.' });
+    return null;
+  }
+}
+
 export function registerPaymentRoutes(app) {
   // Honor-system grant for the static ABA PayWay link on the Pricing page:
   // called the moment the user clicks "Pay", with NO verification that a
   // payment actually happened (that link isn't generated per-transaction,
-  // so there's nothing to check against). This is a deliberate, known
-  // trade-off — anyone can call this and get free access — accepted in
-  // place of building real ABA PayWay API verification (needs merchant
-  // credentials that aren't set up yet). Revisit if abuse shows up.
+  // so there's nothing to check against). That trade-off is still
+  // deliberate and known — revisit if abuse shows up — but requireUid()
+  // at least confines it to the caller's own account: a signed-in user can
+  // grant themselves early access, but can no longer grant it to (or read
+  // payment state for) an account that isn't theirs.
   app.post('/api/payment/claim', async (req, res) => {
     if (!firebaseAdminReady) {
       return res
         .status(500)
         .json({ error: 'FIREBASE_SERVICE_ACCOUNT_JSON is not configured — cannot grant access.' });
     }
-    const { uid } = req.body || {};
-    if (!uid) return res.status(400).json({ error: 'uid is required.' });
+    const uid = await requireUid(req, res);
+    if (!uid) return;
 
     try {
       const expiresAt = await grantAccess(uid);
@@ -110,8 +132,8 @@ export function registerPaymentRoutes(app) {
     if (!paymentReady) {
       return res.status(500).json({ error: 'Bakong payment is not configured on the server yet.' });
     }
-    const { uid } = req.body || {};
-    if (!uid) return res.status(400).json({ error: 'uid is required.' });
+    const uid = await requireUid(req, res);
+    if (!uid) return;
 
     try {
       const { qr, md5 } = buildKhqr(uid);
@@ -133,9 +155,13 @@ export function registerPaymentRoutes(app) {
         .status(500)
         .json({ error: 'FIREBASE_SERVICE_ACCOUNT_JSON is not configured — cannot grant access after payment.' });
     }
+    const uid = await requireUid(req, res);
+    if (!uid) return;
     const { md5 } = req.body || {};
     const record = pending.get(md5);
-    if (!record) return res.status(404).json({ error: 'Unknown or expired payment session.' });
+    if (!record || record.uid !== uid) {
+      return res.status(404).json({ error: 'Unknown or expired payment session.' });
+    }
 
     try {
       const result = await checkBakongTransaction(md5);
