@@ -45,6 +45,13 @@ async function generateJson(prompt, schema, maxOutputTokens = 3000) {
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
 
 const app = express();
+// Railway sits in front of this app as a reverse proxy, so every request
+// arrives with an X-Forwarded-For header set by Railway itself (not by the
+// client) — without this, express-rate-limit can't tell it's safe to trust
+// that header and throws on every request instead of rate-limiting by the
+// real visitor IP. `1` trusts exactly one hop (Railway's own proxy), not
+// an arbitrary chain a malicious client could spoof.
+app.set('trust proxy', 1);
 app.use(
   cors({
     origin: FRONTEND_ORIGIN ? FRONTEND_ORIGIN.split(',').map((s) => s.trim()) : '*',
