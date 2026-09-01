@@ -16,7 +16,11 @@ if (firebaseAdminReady && !admin.apps.length) {
 }
 
 export const adminDb = firebaseAdminReady ? admin.firestore() : null;
-const adminAuth = firebaseAdminReady ? admin.auth() : null;
+// Exported (not just the verifyIdToken wrapper below) so passwordReset.js
+// can call getUserByEmail()/updateUser() — changing another account's
+// password can only ever happen via the Admin SDK or Firebase's own
+// link-based reset flow, never directly from the browser.
+export const adminAuth = firebaseAdminReady ? admin.auth() : null;
 
 // Verifies a Firebase ID token (from an `Authorization: Bearer <token>`
 // header) and returns the uid it was actually issued for. Payment routes

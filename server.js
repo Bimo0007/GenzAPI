@@ -4,6 +4,7 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { GoogleGenAI, Type } from '@google/genai';
 import { registerPaymentRoutes } from './payment.js';
+import { registerPasswordResetRoutes } from './passwordReset.js';
 
 const PORT = process.env.PORT || 3001;
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
@@ -366,6 +367,13 @@ app.get('/', (req, res) => {
 
 app.use('/api/payment', costlyLimiter);
 registerPaymentRoutes(app);
+
+// Same limiter as payment: each request either sends a real email or hits
+// Firebase Admin, so it needs the tighter cap too (a script hammering
+// /request could otherwise spam an inbox, or hammering /confirm could
+// brute-force the 6-digit code faster than MAX_ATTEMPTS would suggest).
+app.use('/api/auth/password-reset', costlyLimiter);
+registerPasswordResetRoutes(app);
 
 app.get('/api/calendar', async (req, res) => {
   if (!FINNHUB_API_KEY) {
