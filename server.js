@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import { GoogleGenAI, Type } from '@google/genai';
 import { registerPaymentRoutes } from './payment.js';
 import { registerPasswordResetRoutes } from './passwordReset.js';
+import { registerAdminUserRoutes } from './adminUsers.js';
 
 const PORT = process.env.PORT || 3001;
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
@@ -381,6 +382,10 @@ registerPaymentRoutes(app);
 // brute-force the 6-digit code faster than MAX_ATTEMPTS would suggest).
 app.use('/api/auth/password-reset', costlyLimiter);
 registerPasswordResetRoutes(app);
+
+// Same limiter: hits Firebase Admin to create a real account.
+app.use('/api/admin/create-user', costlyLimiter);
+registerAdminUserRoutes(app);
 
 app.get('/api/calendar', async (req, res) => {
   if (!FINNHUB_API_KEY) {
