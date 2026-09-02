@@ -14,7 +14,10 @@ async function fetchGoldHistory(period) {
   const start = now - 3 * 24 * 60 * 60; // 3 days of history — plenty for EMA(21) warm-up + recent order blocks
   const url = `https://api.api-ninjas.com/v1/goldpricehistorical?period=${period}&start=${start}&end=${now}`;
   const res = await fetch(url, { headers: { 'X-Api-Key': API_NINJAS_KEY } });
-  if (!res.ok) throw new Error(`API Ninjas ${res.status}`);
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`API Ninjas ${res.status}: ${body}`);
+  }
   const raw = await res.json();
   if (!Array.isArray(raw)) throw new Error('Unexpected response shape');
   // Their response is most-recent-first; the chart/indicator math below
