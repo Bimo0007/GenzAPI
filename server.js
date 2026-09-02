@@ -6,6 +6,7 @@ import { GoogleGenAI, Type } from '@google/genai';
 import { registerPaymentRoutes } from './payment.js';
 import { registerPasswordResetRoutes } from './passwordReset.js';
 import { registerAdminUserRoutes } from './adminUsers.js';
+import { registerGoldSignalRoute } from './goldSignal.js';
 
 const PORT = process.env.PORT || 3001;
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
@@ -386,6 +387,8 @@ registerPasswordResetRoutes(app);
 // Same limiter: hits Firebase Admin to create a real account.
 app.use('/api/admin/create-user', costlyLimiter);
 registerAdminUserRoutes(app);
+
+registerGoldSignalRoute(app);
 
 app.get('/api/calendar', async (req, res) => {
   if (!FINNHUB_API_KEY) {
