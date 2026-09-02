@@ -48,7 +48,7 @@ export function registerGoldSignalRoute(app) {
         return res.json({ bars: cache.bars, cached: true, stale: true });
       }
       console.error('gold history fetch failed:', err);
-      res.status(502).json({ error: 'Failed to fetch gold price history.' });
+      res.status(502).json({ error: 'Failed to fetch gold price history.', detail: err.message });
     }
   });
 }
