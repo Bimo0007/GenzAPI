@@ -5,7 +5,6 @@ import rateLimit from 'express-rate-limit';
 import { GoogleGenAI, Type } from '@google/genai';
 import { registerPaymentRoutes } from './payment.js';
 import { registerPasswordResetRoutes } from './passwordReset.js';
-import { registerJournalSeedRoute } from './journalSeed.js';
 
 const PORT = process.env.PORT || 3001;
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
@@ -382,10 +381,6 @@ registerPaymentRoutes(app);
 // brute-force the 6-digit code faster than MAX_ATTEMPTS would suggest).
 app.use('/api/auth/password-reset', costlyLimiter);
 registerPasswordResetRoutes(app);
-
-// TEMPORARY — one-time journal backfill, see journalSeed.js. Remove this
-// line and the file once it's been run.
-registerJournalSeedRoute(app);
 
 app.get('/api/calendar', async (req, res) => {
   if (!FINNHUB_API_KEY) {
