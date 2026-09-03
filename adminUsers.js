@@ -6,9 +6,11 @@
 import { adminDb, adminAuth, firebaseAdminReady, verifyIdToken } from './firebaseAdmin.js';
 
 // Verifies the caller's Firebase ID token AND that their own Firestore
-// profile has role: 'admin' — without the second check, any signed-in
-// user could call this endpoint and create accounts (including other
-// admins) for themselves.
+// profile has role: 'admin' or 'dev' — without the second check, any
+// signed-in user could call these endpoints and create/delete accounts
+// (including other admins) for themselves. Dev has the same Admin
+// Dashboard access as admin (src/pages/AdminDashboard.jsx), so it's
+// allowed here too.
 async function requireAdminUid(req, res) {
   const header = req.headers.authorization || '';
   const idToken = header.startsWith('Bearer ') ? header.slice(7) : null;
@@ -24,7 +26,8 @@ async function requireAdminUid(req, res) {
     return null;
   }
   const snap = await adminDb.collection('users').doc(uid).get();
-  if (!snap.exists || snap.data().role !== 'admin') {
+  const role = snap.exists ? snap.data().role : null;
+  if (role !== 'admin' && role !== 'dev') {
     res.status(403).json({ error: 'Admin access required.' });
     return null;
   }
@@ -47,7 +50,7 @@ export function registerAdminUserRoutes(app) {
       return res.status(400).json({ error: 'Password must be at least 6 characters.' });
     }
     const normalizedEmail = String(email).trim().toLowerCase();
-    const finalRole = role === 'admin' ? 'admin' : 'user';
+    const finalRole = role === 'admin' || role === 'dev' ? role : 'user';
     const finalStatus = status === 'approved' ? 'approved' : 'pending';
     const finalTier = tier === 'vip' ? 'vip' : 'member';
 
@@ -80,6 +83,36 @@ export function registerAdminUserRoutes(app) {
       }
       console.error('create-user failed:', err);
       res.status(500).json({ error: err.message || 'Failed to create user.' });
+    }
+  });
+
+  // Deletes both the Firebase Auth account and its Firestore profile — has
+  // to go through the Admin SDK since the client is never allowed to delete
+  // arbitrary user docs (firestore.rules: allow delete: if false).
+  app.post('/api/admin/delete-user', async (req, res) => {
+    if (!firebaseAdminReady) {
+      return res.status(500).json({ error: 'FIREBASE_SERVICE_ACCOUNT_JSON is not configured.' });
+    }
+    const adminUid = await requireAdminUid(req, res);
+    if (!adminUid) return;
+
+    const { uid } = req.body || {};
+    if (!uid) {
+      return res.status(400).json({ error: 'uid is required.' });
+    }
+    if (uid === adminUid) {
+      return res.status(400).json({ error: "You can't delete your own account." });
+    }
+
+    try {
+      await adminAuth.deleteUser(uid).catch((err) => {
+        if (err.code !== 'auth/user-not-found') throw err;
+      });
+      await adminDb.collection('users').doc(uid).delete();
+      res.json({ ok: true });
+    } catch (err) {
+      console.error('delete-user failed:', err);
+      res.status(500).json({ error: err.message || 'Failed to delete user.' });
     }
   });
 }

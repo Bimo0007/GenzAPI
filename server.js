@@ -118,7 +118,7 @@ async function fetchGoldSilverNews() {
   return articles;
 }
 
-const LANGUAGE_NAME = { kh: 'Khmer', en: 'English', zh: 'Chinese (Simplified)' };
+const LANGUAGE_NAME = { kh: 'Khmer', en: 'English' };
 
 // ---------------------------------------------------------------------------
 // PER-ARTICLE BREAKDOWN — lets users get a gold-impact read on one specific
@@ -391,7 +391,7 @@ app.get('/api/calendar', async (req, res) => {
   if (!FINNHUB_API_KEY) {
     return res.status(500).json({ error: 'FINNHUB_API_KEY is not configured on the server.' });
   }
-  const lang = ['kh', 'en', 'zh'].includes(req.query.lang) ? req.query.lang : 'en';
+  const lang = ['kh', 'en'].includes(req.query.lang) ? req.query.lang : 'en';
   try {
     const events = await fetchEconomicCalendar();
 
@@ -425,7 +425,7 @@ app.post('/api/news/analyze', costlyLimiter, async (req, res) => {
   if (!url || !title) {
     return res.status(400).json({ error: 'url and title are required.' });
   }
-  const lang = ['kh', 'en', 'zh'].includes(req.body?.lang) ? req.body.lang : 'en';
+  const lang = ['kh', 'en'].includes(req.body?.lang) ? req.body.lang : 'en';
   try {
     const result = await analyzeArticle({ url, title, description }, lang);
     res.json(result);
