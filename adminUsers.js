@@ -5,6 +5,7 @@
 // of their own session — there's no way around that from the client.
 import { adminDb, adminAuth, firebaseAdminReady, verifyIdToken } from './firebaseAdmin.js';
 import { getMessaging } from 'firebase-admin/messaging';
+import { startNewsPushWatcher } from './newsPush.js';
 
 // Verifies the caller's Firebase ID token AND that their own Firestore
 // profile has role: 'admin' or 'dev' — without the second check, any
@@ -36,6 +37,8 @@ async function requireAdminUid(req, res) {
 }
 
 export function registerAdminUserRoutes(app) {
+  startNewsPushWatcher();
+
   app.post('/api/admin/create-user', async (req, res) => {
     if (!firebaseAdminReady) {
       return res.status(500).json({ error: 'FIREBASE_SERVICE_ACCOUNT_JSON is not configured.' });
