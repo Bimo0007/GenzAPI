@@ -4,6 +4,7 @@
 // client SDK signs the browser in AS that new user, kicking the admin out
 // of their own session — there's no way around that from the client.
 import { adminDb, adminAuth, firebaseAdminReady, verifyIdToken } from './firebaseAdmin.js';
+import { getMessaging } from 'firebase-admin/messaging';
 
 // Verifies the caller's Firebase ID token AND that their own Firestore
 // profile has role: 'admin' or 'dev' — without the second check, any
@@ -113,6 +114,96 @@ export function registerAdminUserRoutes(app) {
     } catch (err) {
       console.error('delete-user failed:', err);
       res.status(500).json({ error: err.message || 'Failed to delete user.' });
+    }
+  });
+
+  // Publish a generic signal alert to registered paid-member devices. The
+  // requester is authenticated as admin/dev and recipient plans are rechecked
+  // server-side, so free users cannot be added by editing the client request.
+  app.post('/api/admin/notify-signal', async (req, res) => {
+    if (!firebaseAdminReady) {
+      return res.status(503).json({ error: 'Firebase Admin is not configured on this API.' });
+    }
+    const adminUid = await requireAdminUid(req, res);
+    if (!adminUid) return;
+
+    const signalId = typeof req.body?.signalId === 'string' ? req.body.signalId.trim() : '';
+    if (!signalId || signalId.length > 200 || signalId.includes('/')) {
+      return res.status(400).json({ error: 'A valid signalId is required.' });
+    }
+
+    try {
+      const signalSnap = await adminDb.collection('signals').doc(signalId).get();
+      if (!signalSnap.exists) return res.status(404).json({ error: 'Signal was not found.' });
+      if (signalSnap.data().status && signalSnap.data().status !== 'active') {
+        return res.status(400).json({ error: 'Only active signals can be announced.' });
+      }
+
+      const tokenSnap = await adminDb.collectionGroup('notificationTokens').get();
+      const profileReads = new Map();
+      const recipients = [];
+      await Promise.all(tokenSnap.docs.map(async (tokenDoc) => {
+        const uid = tokenDoc.ref.parent.parent?.id;
+        const token = tokenDoc.data().token;
+        if (!uid || !token) return;
+
+        let profileRead = profileReads.get(uid);
+        if (!profileRead) {
+          profileRead = adminDb.collection('users').doc(uid).get();
+          profileReads.set(uid, profileRead);
+        }
+        const profileSnap = await profileRead;
+        const profile = profileSnap.exists ? profileSnap.data() : null;
+        if (!profile || profile.role === 'admin' || profile.role === 'dev') return;
+
+        const plans = [profile.plan, profile.tier, profile.subscription, profile.membership]
+          .filter((value) => typeof value === 'string')
+          .map((value) => value.trim().toLowerCase());
+        const hasPaidPlan = plans.some((plan) =>
+          plan.includes('starter') || plan.includes('pro') || plan.includes('elite') || plan === 'vip'
+        );
+        if (hasPaidPlan) recipients.push({ token, ref: tokenDoc.ref });
+      }));
+
+      let sentCount = 0;
+      let failedCount = 0;
+      for (let start = 0; start < recipients.length; start += 500) {
+        const batch = recipients.slice(start, start + 500);
+        const result = await getMessaging().sendEachForMulticast({
+          tokens: batch.map((recipient) => recipient.token),
+          notification: {
+            title: '⚡ New Signal',
+            body: 'A new signal structure is in the market. Check it out.',
+          },
+          data: { url: 'https://genztradermentorship.org/' },
+          webpush: {
+            notification: {
+              icon: 'https://genztradermentorship.org/favicon.png',
+              badge: 'https://genztradermentorship.org/favicon.png',
+              tag: `signal-${signalId}`,
+              renotify: true,
+              requireInteraction: true,
+            },
+            fcmOptions: { link: 'https://genztradermentorship.org/' },
+          },
+        });
+
+        sentCount += result.successCount;
+        failedCount += result.failureCount;
+        const removals = [];
+        result.responses.forEach((response, index) => {
+          const code = response.error?.code;
+          if (!response.success && (code === 'messaging/registration-token-not-registered' || code === 'messaging/invalid-registration-token')) {
+            removals.push(batch[index].ref.delete());
+          }
+        });
+        await Promise.all(removals);
+      }
+
+      res.json({ ok: true, sentCount, failedCount, registeredCount: recipients.length });
+    } catch (err) {
+      console.error('notify-signal failed:', err);
+      res.status(500).json({ error: 'Failed to send signal push notifications.' });
     }
   });
 }
