@@ -138,9 +138,6 @@ export function registerAdminUserRoutes(app) {
     try {
       const signalSnap = await adminDb.collection('signals').doc(signalId).get();
       if (!signalSnap.exists) return res.status(404).json({ error: 'Signal was not found.' });
-      if (signalSnap.data().status && signalSnap.data().status !== 'active') {
-        return res.status(400).json({ error: 'Only active signals can be announced.' });
-      }
 
       const tokenSnap = await adminDb.collectionGroup('notificationTokens').get();
       const profileReads = new Map();
