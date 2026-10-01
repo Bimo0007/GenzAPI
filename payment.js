@@ -1,182 +1,147 @@
-// Bakong KHQR payment for the Pricing page ($9.99 / first 3 months).
-//
-// KHQR generation (the `qr` string + its `md5`) happens entirely locally via
-// the `bakong-khqr` package — no API call needed for that part. Verifying
-// that a payment actually happened DOES need a live call to the National
-// Bank of Cambodia's Bakong Open API (check_transaction_by_md5), which
-// requires real merchant credentials — see .env.example for how to get them.
-//
-// IMPORTANT: per Bakong's own docs, check_transaction_by_md5 can only be
-// called from servers physically located in Cambodia once BAKONG_API_BASE_URL
-// points at production — calls from elsewhere (e.g. Railway's Singapore
-// region) are blocked. Confirm this still holds and where your token's
-// environment (sandbox vs production) stands before relying on this in
-// production; sandbox testing is unaffected.
-import pkg from 'bakong-khqr';
-import QRCode from 'qrcode';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { adminDb, firebaseAdminReady, verifyIdToken } from './firebaseAdmin.js';
+import { bakongAccountId, bakongReady, createProviderPayment, verifyProviderPayment } from './paymentProviders/bakong.js';
 
-const { BakongKHQR, khqrData, IndividualInfo } = pkg;
+// The server owns prices, features, and limits. These IDs are the stable
+// identifiers used by the UI; never accept price/permissions from a client.
+export const PACKAGE_CATALOG = {
+  starter: { name: 'Starter', monthly: 19.99, yearly: 199, features: ['vip_signals', 'academy_basic'], limits: { pipCoach: 10, signals: 30 } },
+  pro: { name: 'Pro', monthly: 29.99, yearly: 299, features: ['vip_signals', 'academy_basic', 'pip_coach', 'backtesting'], limits: { pipCoach: 100, signals: 100 } },
+  elite: { name: 'Elite', monthly: 79, yearly: 790, features: ['vip_signals', 'academy_basic', 'pip_coach', 'backtesting', 'advanced_academy', 'priority_support'], limits: { pipCoach: -1, signals: -1 } },
+};
 
-const BAKONG_API_BASE_URL = process.env.BAKONG_API_BASE_URL;
-const BAKONG_API_TOKEN = process.env.BAKONG_API_TOKEN;
-const BAKONG_ACCOUNT_ID = process.env.BAKONG_ACCOUNT_ID;
-const BAKONG_MERCHANT_NAME = process.env.BAKONG_MERCHANT_NAME || 'GenZ Trader';
-const BAKONG_MERCHANT_CITY = process.env.BAKONG_MERCHANT_CITY || 'Phnom Penh';
-
-const PRICE_USD = 9.99;
-const QR_EXPIRY_MS = 15 * 60 * 1000; // 15 minutes to scan and pay
-const SUBSCRIPTION_MS = 90 * 24 * 60 * 60 * 1000; // "first 3 months"
-
-const paymentReady = Boolean(BAKONG_API_BASE_URL && BAKONG_API_TOKEN && BAKONG_ACCOUNT_ID);
-
-// md5 -> { uid, createdAt } — pending, not-yet-confirmed payments. In-memory
-// only: a server restart just means an in-flight QR needs to be regenerated,
-// same as it expiring naturally after QR_EXPIRY_MS.
-const pending = new Map();
-
-function buildKhqr(uid) {
-  const billNumber = `GZT-${uid.slice(0, 8)}-${Date.now()}`;
-  const info = new IndividualInfo(BAKONG_ACCOUNT_ID, BAKONG_MERCHANT_NAME, BAKONG_MERCHANT_CITY, {
-    currency: khqrData.currency.usd,
-    amount: PRICE_USD,
-    billNumber,
-    storeLabel: BAKONG_MERCHANT_NAME,
-    terminalLabel: 'Web',
-    expirationTimestamp: Date.now() + QR_EXPIRY_MS,
-  });
-  const khqr = new BakongKHQR();
-  const result = khqr.generateIndividual(info);
-  if (result.status.code !== 0) {
-    throw new Error(result.status.message || 'KHQR generation failed');
+async function loadPackages() {
+  const packages = {};
+  for (const [id, defaults] of Object.entries(PACKAGE_CATALOG)) {
+    const ref = adminDb.collection('packages').doc(id);
+    const snapshot = await ref.get();
+    if (!snapshot.exists) {
+      await ref.set({ packageId: id, name: defaults.name, prices: { monthly: defaults.monthly, yearly: defaults.yearly },
+        currency: 'USD', durations: { monthly: 1, yearly: 12 }, features: defaults.features, limits: defaults.limits, active: true });
+      packages[id] = { packageId: id, name: defaults.name, prices: { monthly: defaults.monthly, yearly: defaults.yearly },
+        currency: 'USD', durations: { monthly: 1, yearly: 12 }, features: defaults.features, limits: defaults.limits, active: true };
+    } else packages[id] = snapshot.data();
   }
-  return result.data; // { qr, md5 }
+  return packages;
 }
 
-async function checkBakongTransaction(md5) {
-  const res = await fetch(`${BAKONG_API_BASE_URL}/v1/check_transaction_by_md5`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${BAKONG_API_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ md5 }),
-  });
-  return res.json();
-}
-
-// Marks the user approved and records when this intro period ends. Nothing
-// currently reads subscriptionExpiresAt to auto-revoke access when it
-// passes — that would need a scheduled job, which is a deliberate "not yet"
-// for this first version. It's there for admins to see in Firestore.
-async function grantAccess(uid) {
-  const paidAt = Date.now();
-  const expiresAt = paidAt + SUBSCRIPTION_MS;
-  await adminDb.collection('users').doc(uid).update({
-    status: 'approved',
-    paidAt,
-    subscriptionExpiresAt: expiresAt,
-  });
-  return expiresAt;
-}
-
-// Pulls the caller's uid out of a verified Firebase ID token instead of
-// trusting a `uid` field in the request body — a bare uid in JSON is just a
-// string anyone can type in, so without this a caller could grant/check
-// payment access for an account that isn't theirs. Sends the 401 response
-// itself on failure; callers should return immediately when this resolves
-// to null.
 async function requireUid(req, res) {
-  const header = req.headers.authorization || '';
-  const idToken = header.startsWith('Bearer ') ? header.slice(7) : null;
-  if (!idToken) {
-    res.status(401).json({ error: 'Missing Authorization bearer token.' });
+  const value = req.headers.authorization || '';
+  if (!value.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'Authentication required.' });
     return null;
   }
-  try {
-    return await verifyIdToken(idToken);
-  } catch {
-    res.status(401).json({ error: 'Invalid or expired auth token.' });
-    return null;
-  }
+  try { return await verifyIdToken(value.slice(7)); }
+  catch { res.status(401).json({ error: 'Invalid or expired auth token.' }); return null; }
+}
+
+function addPeriod(date, months) {
+  const result = new Date(date);
+  result.setUTCMonth(result.getUTCMonth() + months);
+  return result;
 }
 
 export function registerPaymentRoutes(app) {
-  // Honor-system grant for the static ABA PayWay link on the Pricing page:
-  // called the moment the user clicks "Pay", with NO verification that a
-  // payment actually happened (that link isn't generated per-transaction,
-  // so there's nothing to check against). That trade-off is still
-  // deliberate and known — revisit if abuse shows up — but requireUid()
-  // at least confines it to the caller's own account: a signed-in user can
-  // grant themselves early access, but can no longer grant it to (or read
-  // payment state for) an account that isn't theirs.
-  app.post('/api/payment/claim', async (req, res) => {
-    if (!firebaseAdminReady) {
-      return res
-        .status(500)
-        .json({ error: 'FIREBASE_SERVICE_ACCOUNT_JSON is not configured — cannot grant access.' });
-    }
-    const uid = await requireUid(req, res);
-    if (!uid) return;
-
+  app.get('/api/packages', async (_req, res) => {
+    if (!firebaseAdminReady) return res.status(503).json({ error: 'Package catalog is not configured.' });
     try {
-      const expiresAt = await grantAccess(uid);
-      res.json({ approved: true, expiresAt });
-    } catch (err) {
-      console.error(err);
-      res.status(502).json({ error: 'Failed to grant access.' });
-    }
+      const packages = await loadPackages();
+      res.json({ packages: Object.entries(packages).filter(([, p]) => p.active).map(([id, p]) => ({
+        id, name: p.name, currency: p.currency, billing: {
+          monthly: { amount: p.prices.monthly, period: 'monthly' },
+          yearly: { amount: p.prices.yearly, period: 'yearly' },
+        }, features: p.features, limits: p.limits,
+      })) });
+    } catch (error) { console.error('Package catalog failed:', error); res.status(502).json({ error: 'Could not load packages.' }); }
   });
 
-  app.post('/api/payment/create', async (req, res) => {
-    if (!paymentReady) {
-      return res.status(500).json({ error: 'Bakong payment is not configured on the server yet.' });
-    }
-    const uid = await requireUid(req, res);
-    if (!uid) return;
-
+  app.post('/api/payments', async (req, res) => {
+    if (!firebaseAdminReady) return res.status(503).json({ error: 'Payments are not configured.' });
+    if (!bakongReady) return res.status(503).json({ error: 'Bakong is not configured.' });
+    const uid = await requireUid(req, res); if (!uid) return;
+    const { packageId, billing } = req.body || {};
+    if (!PACKAGE_CATALOG[packageId] || !['monthly', 'yearly'].includes(billing)) return res.status(400).json({ error: 'Choose a valid package and billing period.' });
     try {
-      const { qr, md5 } = buildKhqr(uid);
-      const qrImage = await QRCode.toDataURL(qr);
-      pending.set(md5, { uid, createdAt: Date.now() });
-      res.json({ md5, qrImage, price: PRICE_USD, currency: 'USD', expiresInMs: QR_EXPIRY_MS });
-    } catch (err) {
-      console.error(err);
-      res.status(502).json({ error: 'Failed to generate KHQR code.' });
-    }
-  });
-
-  app.post('/api/payment/check', async (req, res) => {
-    if (!paymentReady) {
-      return res.status(500).json({ error: 'Bakong payment is not configured on the server yet.' });
-    }
-    if (!firebaseAdminReady) {
-      return res
-        .status(500)
-        .json({ error: 'FIREBASE_SERVICE_ACCOUNT_JSON is not configured — cannot grant access after payment.' });
-    }
-    const uid = await requireUid(req, res);
-    if (!uid) return;
-    const { md5 } = req.body || {};
-    const record = pending.get(md5);
-    if (!record || record.uid !== uid) {
-      return res.status(404).json({ error: 'Unknown or expired payment session.' });
-    }
-
-    try {
-      const result = await checkBakongTransaction(md5);
-      if (result.responseCode === 0 && result.data) {
-        if (result.data.toAccountId !== BAKONG_ACCOUNT_ID) {
-          return res.status(409).json({ error: 'Payment recipient mismatch.' });
-        }
-        const expiresAt = await grantAccess(record.uid);
-        pending.delete(md5);
-        return res.json({ paid: true, expiresAt });
+      const packages = await loadPackages();
+      const plan = packages[packageId];
+      if (!plan?.active || plan.currency !== 'USD' || !Number.isFinite(plan.prices?.[billing]) || plan.prices[billing] <= 0
+        || !Array.isArray(plan.features) || !plan.limits || typeof plan.limits !== 'object'
+        || !Number.isInteger(plan.durations?.[billing]) || plan.durations[billing] < 1) {
+        return res.status(400).json({ error: 'This package is unavailable.' });
       }
-      res.json({ paid: false });
-    } catch (err) {
-      console.error(err);
-      res.status(502).json({ error: 'Failed to check payment status.' });
+      const user = await adminDb.collection('users').doc(uid).get();
+      if (!user.exists) return res.status(404).json({ error: 'User profile not found.' });
+      const paymentRef = adminDb.collection('payments').doc();
+      const amount = plan.prices[billing];
+      const providerPayment = await createProviderPayment({ paymentId: paymentRef.id, amount });
+      const expiresAt = Timestamp.fromMillis(providerPayment.expiresAt);
+      await paymentRef.create({
+        userId: uid, packageId, packageName: plan.name, packageFeatures: plan.features,
+        packageLimits: plan.limits, durationMonths: plan.durations?.[billing] || (billing === 'yearly' ? 12 : 1),
+        billing, amount, currency: plan.currency || 'USD',
+        paymentStatus: 'pending', provider: 'bakong', providerPaymentId: providerPayment.providerPaymentId,
+        createdAt: FieldValue.serverTimestamp(), expiresAt,
+      });
+      res.status(201).json({ paymentId: paymentRef.id, qrImage: providerPayment.qrImage,
+        amount, currency: 'USD', packageId, packageName: plan.name, expiresAt: expiresAt.toMillis(),
+        recipient: providerPayment.recipient });
+    } catch (error) { console.error('Payment create failed:', error); res.status(502).json({ error: 'Could not create payment.' }); }
+  });
+
+  app.post('/api/payments/:paymentId/verify', async (req, res) => {
+    if (!firebaseAdminReady || !bakongReady) return res.status(503).json({ error: 'Payments are not configured.' });
+    const uid = await requireUid(req, res); if (!uid) return;
+    const ref = adminDb.collection('payments').doc(req.params.paymentId);
+    try {
+      const payment = await ref.get();
+      if (!payment.exists || payment.data().userId !== uid) return res.status(404).json({ error: 'Payment not found.' });
+      const order = payment.data();
+      if (order.paymentStatus === 'paid') return res.json({ status: 'paid' });
+      if (order.paymentStatus !== 'pending') return res.json({ status: order.paymentStatus });
+      if (order.expiresAt.toMillis() <= Date.now()) {
+        await ref.update({ paymentStatus: 'expired', updatedAt: FieldValue.serverTimestamp() });
+        return res.json({ status: 'expired' });
+      }
+      const result = await verifyProviderPayment(order.providerPaymentId);
+      if (result.responseCode !== 0 || !result.data) return res.json({ status: 'pending' });
+      const transaction = result.data;
+      const paidAmount = Number(transaction.amount);
+      const currency = String(transaction.currency || '').toUpperCase();
+      if (transaction.toAccountId !== bakongAccountId || !Number.isFinite(paidAmount) || paidAmount !== order.amount || currency !== order.currency) {
+        await ref.update({ paymentStatus: 'failed', failureReason: 'verified_transaction_mismatch', updatedAt: FieldValue.serverTimestamp() });
+        return res.json({ status: 'failed' });
+      }
+      const transactionId = transaction.hash || transaction.transactionId || order.providerPaymentId;
+      const startDate = new Date();
+      const expiryDate = addPeriod(startDate, order.durationMonths);
+      const subscriptionRef = adminDb.collection('subscriptions').doc(uid);
+      const transactionRef = adminDb.collection('processedPaymentTransactions').doc(transactionId);
+      await adminDb.runTransaction(async (tx) => {
+        const fresh = await tx.get(ref);
+        if (fresh.data()?.paymentStatus === 'paid') return;
+        if (fresh.data()?.paymentStatus !== 'pending') throw new Error('Payment is no longer pending.');
+        const used = await tx.get(transactionRef);
+        if (used.exists) throw new Error('Transaction already used.');
+        const subscription = {
+          userId: uid, packageId: order.packageId, packageName: order.packageName,
+          amountPaid: order.amount, paymentId: ref.id, paymentStatus: 'paid',
+          startDate: Timestamp.fromDate(startDate), expiryDate: Timestamp.fromDate(expiryDate),
+          features: order.packageFeatures, limits: order.packageLimits,
+          usage: Object.fromEntries(Object.entries(order.packageLimits).map(([key]) => [key, 0])),
+          status: 'active', updatedAt: FieldValue.serverTimestamp(),
+        };
+        tx.update(ref, { paymentStatus: 'paid', providerTransactionId: transactionId, paidAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+        tx.create(transactionRef, { paymentId: ref.id, userId: uid, processedAt: FieldValue.serverTimestamp() });
+        tx.set(subscriptionRef, subscription);
+        tx.set(adminDb.collection('users').doc(uid), {
+          plan: order.packageId, tier: 'vip', status: 'approved',
+          activeSubscriptionId: uid, subscriptionExpiresAt: expiryDate.getTime(),
+        }, { merge: true });
+      });
+      res.json({ status: 'paid' });
+    } catch (error) {
+      console.error('Payment verification failed:', error);
+      res.status(502).json({ error: 'Could not verify payment right now.' });
     }
   });
 }
