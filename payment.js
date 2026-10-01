@@ -5,9 +5,9 @@ import { bakongAccountId, bakongReady, createProviderPayment, verifyProviderPaym
 // The server owns prices, features, and limits. These IDs are the stable
 // identifiers used by the UI; never accept price/permissions from a client.
 export const PACKAGE_CATALOG = {
-  starter: { name: 'Starter', monthly: 19.99, yearly: 199, features: ['vip_signals', 'academy_basic'], limits: { pipCoach: 10, signals: 30 } },
-  pro: { name: 'Pro', monthly: 29.99, yearly: 299, features: ['vip_signals', 'academy_basic', 'pip_coach', 'backtesting'], limits: { pipCoach: 100, signals: 100 } },
-  elite: { name: 'Elite', monthly: 79, yearly: 790, features: ['vip_signals', 'academy_basic', 'pip_coach', 'backtesting', 'advanced_academy', 'priority_support'], limits: { pipCoach: -1, signals: -1 } },
+  starter: { name: 'Starter', monthly: 19.99, yearly: 199, features: ['vip_signals', 'academy_basic'], limits: { pipCoach: 10, pipImageSignals: 4, signals: 30 } },
+  pro: { name: 'Pro', monthly: 29.99, yearly: 299, features: ['vip_signals', 'academy_basic', 'pip_coach', 'backtesting'], limits: { pipCoach: 100, pipImageSignals: 12, signals: 100 } },
+  elite: { name: 'Elite', monthly: 79, yearly: 790, features: ['vip_signals', 'academy_basic', 'pip_coach', 'backtesting', 'advanced_academy', 'priority_support'], limits: { pipCoach: -1, pipImageSignals: 20, signals: -1 } },
 };
 
 async function loadPackages() {
@@ -20,7 +20,18 @@ async function loadPackages() {
         currency: 'USD', durations: { monthly: 1, yearly: 12 }, features: defaults.features, limits: defaults.limits, active: true });
       packages[id] = { packageId: id, name: defaults.name, prices: { monthly: defaults.monthly, yearly: defaults.yearly },
         currency: 'USD', durations: { monthly: 1, yearly: 12 }, features: defaults.features, limits: defaults.limits, active: true };
-    } else packages[id] = snapshot.data();
+    } else {
+      const stored = snapshot.data();
+      const limits = {
+        ...defaults.limits,
+        ...(stored.limits || {}),
+        pipImageSignals: defaults.limits.pipImageSignals,
+      };
+      if (stored.limits?.pipImageSignals !== limits.pipImageSignals) {
+        await ref.set({ limits }, { merge: true });
+      }
+      packages[id] = { ...stored, limits };
+    }
   }
   return packages;
 }

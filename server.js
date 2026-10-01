@@ -6,6 +6,7 @@ import { GoogleGenAI, Type } from '@google/genai';
 import { registerPaymentRoutes } from './payment.js';
 import { registerPasswordResetRoutes } from './passwordReset.js';
 import { registerAdminUserRoutes } from './adminUsers.js';
+import { adminDb, firebaseAdminReady, verifyIdToken } from './firebaseAdmin.js';
 
 const PORT = process.env.PORT || 3001;
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
@@ -68,6 +69,181 @@ const generalLimiter = rateLimit({ windowMs: 60 * 1000, limit: 60, standardHeade
 const costlyLimiter = rateLimit({ windowMs: 60 * 1000, limit: 12, standardHeaders: true, legacyHeaders: false });
 const pipLimiter = rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false });
 app.use(generalLimiter);
+
+const PIP_IMAGE_SIGNAL_LIMITS = { starter: 4, pro: 12, elite: 20 };
+
+async function reservePipImageSignal(req) {
+  const authorization = req.headers.authorization || '';
+  if (!authorization.startsWith('Bearer ')) {
+    const error = new Error('Sign in to request a chart signal.');
+    error.status = 401;
+    throw error;
+  }
+  if (!firebaseAdminReady) {
+    const error = new Error('Pip image signal limits are not configured on the server.');
+    error.status = 503;
+    throw error;
+  }
+
+  let uid;
+  try {
+    uid = await verifyIdToken(authorization.slice(7));
+  } catch {
+    const error = new Error('Your session expired. Sign in again to request a chart signal.');
+    error.status = 401;
+    throw error;
+  }
+
+  const userRef = adminDb.collection('users').doc(uid);
+  const subscriptionRef = adminDb.collection('subscriptions').doc(uid);
+  const profileSnap = await userRef.get();
+  const profile = profileSnap.exists ? profileSnap.data() : {};
+  if (profile.role === 'admin' || profile.role === 'dev') {
+    return { uid, unlimited: true, limit: -1, used: 0, remaining: -1 };
+  }
+
+  const subscriptionSnap = await subscriptionRef.get();
+  const subscription = subscriptionSnap.exists ? subscriptionSnap.data() : null;
+  const planId = String(subscription?.packageId || '').toLowerCase();
+  const limit = PIP_IMAGE_SIGNAL_LIMITS[planId];
+  const expiryDate = subscription?.expiryDate?.toDate?.();
+  if (subscription?.status !== 'active' || !expiryDate || expiryDate <= new Date() || !limit) {
+    const error = new Error('An active Starter, Pro, or Elite subscription is required to request chart signals.');
+    error.status = 403;
+    throw error;
+  }
+
+  const now = new Date();
+  const windowStart = now.getTime() - 24 * 60 * 60 * 1000;
+  const requestId = `${now.getTime()}_${Math.random().toString(36).slice(2)}`;
+  const usageRef = adminDb.collection('pipImageSignalUsage').doc(uid);
+  const result = await adminDb.runTransaction(async (tx) => {
+    const usageSnap = await tx.get(usageRef);
+    const storedRequests = usageSnap.exists && Array.isArray(usageSnap.data().requests)
+      ? usageSnap.data().requests
+      : [];
+    const activeRequests = storedRequests.filter((item) => {
+      const createdAt = item?.createdAt?.toDate?.() || new Date(item?.createdAt);
+      return Number.isFinite(createdAt.getTime()) && createdAt.getTime() > windowStart;
+    });
+    const used = activeRequests.length;
+    if (used >= limit) {
+      const nextResetAt = new Date(Math.min(...activeRequests.map((item) => (
+        (item.createdAt?.toDate?.() || new Date(item.createdAt)).getTime()
+      ))) + 24 * 60 * 60 * 1000);
+      const error = new Error(`You have used all ${limit} chart signal requests in the last 24 hours. A request becomes available again after an earlier request reaches its 24-hour expiry.`);
+      error.status = 429;
+      error.quota = { planId, limit, used, remaining: 0, resetsAt: nextResetAt.toISOString() };
+      throw error;
+    }
+    const requests = [...activeRequests, { id: requestId, createdAt: now }];
+    tx.set(usageRef, {
+      userId: uid,
+      planId,
+      limit,
+      used: requests.length,
+      requests,
+      updatedAt: new Date(),
+    }, { merge: true });
+    const nextResetAt = new Date(Math.min(...requests.map((item) => item.createdAt.getTime())) + 24 * 60 * 60 * 1000);
+    return { uid, usageRef, requestId, planId, limit, used: requests.length, remaining: limit - requests.length, resetsAt: nextResetAt.toISOString() };
+  });
+  return result;
+}
+
+async function releasePipImageSignal(reservation) {
+  if (!reservation?.usageRef) return;
+  await adminDb.runTransaction(async (tx) => {
+    const usageSnap = await tx.get(reservation.usageRef);
+    if (!usageSnap.exists) return;
+    const requests = Array.isArray(usageSnap.data().requests) ? usageSnap.data().requests : [];
+    const remainingRequests = requests.filter((item) => item.id !== reservation.requestId);
+    if (!remainingRequests.length) tx.delete(reservation.usageRef);
+    else tx.update(reservation.usageRef, { requests: remainingRequests, used: remainingRequests.length, updatedAt: new Date() });
+  });
+}
+
+app.get('/api/member/signals', pipLimiter, async (req, res) => {
+  const authorization = req.headers.authorization || '';
+  if (!authorization.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Authentication required.' });
+  }
+  if (!firebaseAdminReady) {
+    return res.status(503).json({ error: 'Signal access is not configured on the server.' });
+  }
+
+  try {
+    const uid = await verifyIdToken(authorization.slice(7));
+    const [profileSnap, subscriptionSnap] = await Promise.all([
+      adminDb.collection('users').doc(uid).get(),
+      adminDb.collection('subscriptions').doc(uid).get(),
+    ]);
+    const profile = profileSnap.exists ? profileSnap.data() : {};
+    const isStaff = profile.role === 'admin' || profile.role === 'dev';
+    const subscription = subscriptionSnap.exists ? subscriptionSnap.data() : null;
+    const expiresAt = subscription?.expiryDate?.toDate?.()?.getTime()
+      ?? Number(profile.subscriptionExpiresAt || 0);
+    const planCandidates = [subscription?.packageId, profile.plan, profile.tier]
+      .filter((value) => typeof value === 'string')
+      .map((value) => value.toLowerCase());
+    const normalizedPlan = planCandidates.some((value) => value.includes('elite')) ? 'elite'
+      : planCandidates.some((value) => value.includes('pro')) ? 'pro'
+      : planCandidates.some((value) => value.includes('starter') || value === 'vip') ? 'starter'
+      : null;
+    const hasPaidAccess = subscriptionSnap.exists
+      ? subscription?.status === 'active' && expiresAt > Date.now() && Boolean(normalizedPlan)
+      : profile.status === 'approved' && Boolean(normalizedPlan)
+        && (!expiresAt || expiresAt > Date.now());
+
+    if (!isStaff && !hasPaidAccess) {
+      return res.status(403).json({ error: 'An active Starter, Pro, or Elite plan is required to view signals.' });
+    }
+
+    const signalSnapshot = await adminDb.collection('signals').orderBy('createdAt', 'desc').get();
+    const allSignals = signalSnapshot.docs.map((snapshot) => {
+      const data = snapshot.data();
+      const createdAtMs = data.createdAt?.toMillis?.() ?? Number(data.publishedAt || Date.now());
+      return {
+        id: snapshot.id,
+        ...data,
+        createdAt: createdAtMs,
+        minutesAgo: Math.max(0, Math.floor((Date.now() - createdAtMs) / 60_000)),
+        _createdAtMs: createdAtMs,
+      };
+    });
+
+    let visibleSignals = allSignals;
+    let visibilityPercent = 100;
+    if (!isStaff) {
+      const share = normalizedPlan === 'starter' ? 0.5 : normalizedPlan === 'pro' ? 0.75 : 1;
+      visibilityPercent = Math.round(share * 100);
+      const byDay = new Map();
+      for (const signal of allSignals) {
+        const day = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Asia/Phnom_Penh', year: 'numeric', month: '2-digit', day: '2-digit',
+        }).format(new Date(signal._createdAtMs));
+        if (!byDay.has(day)) byDay.set(day, []);
+        byDay.get(day).push(signal);
+      }
+      visibleSignals = [];
+      for (const dailySignals of byDay.values()) {
+        dailySignals.sort((a, b) => b._createdAtMs - a._createdAtMs);
+        visibleSignals.push(...dailySignals.slice(0, Math.ceil(dailySignals.length * share)));
+      }
+    }
+
+    res.json({
+      signals: visibleSignals
+        .sort((a, b) => b._createdAtMs - a._createdAtMs)
+        .map(({ _createdAtMs, ...signal }) => signal),
+      plan: isStaff ? 'staff' : normalizedPlan,
+      visibilityPercent,
+    });
+  } catch (error) {
+    console.error('Member signal feed failed:', error);
+    res.status(500).json({ error: 'Could not load the signal feed.' });
+  }
+});
 
 // Articles about gold/silver specifically as a market/price (not the word
 // "gold"/"silver" used loosely, e.g. "digital gold" for Bitcoin, "silver
@@ -532,7 +708,19 @@ app.post('/api/pip/chat', pipLimiter, async (req, res) => {
     return res.status(400).json({ error: 'prompt or image is required.' });
   }
 
+  const imageMatch = image && typeof image === 'string'
+    ? image.match(/^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/)
+    : null;
+  if (image && !imageMatch) {
+    return res.status(400).json({ error: 'Upload a PNG, JPG, or WebP chart image.' });
+  }
+  if (imageMatch && imageMatch[2].length > 8 * 1024 * 1024) {
+    return res.status(413).json({ error: 'Chart images must be 6 MB or smaller.' });
+  }
+
+  let imageReservation = null;
   try {
+    if (imageMatch) imageReservation = await reservePipImageSignal(req);
     const contents = [];
 
     // Prior conversation history (last 8 turns for bounded context)
@@ -553,16 +741,13 @@ app.post('/api/pip/chat', pipLimiter, async (req, res) => {
 
     // Current turn
     const currentParts = [];
-    if (image && typeof image === 'string') {
-      const match = image.match(/^data:([^;]+);base64,(.+)$/);
-      if (match) {
-        currentParts.push({
-          inlineData: {
-            mimeType: match[1],
-            data: match[2],
-          },
-        });
-      }
+    if (imageMatch) {
+      currentParts.push({
+        inlineData: {
+          mimeType: imageMatch[1],
+          data: imageMatch[2],
+        },
+      });
     }
 
     currentParts.push({ text: prompt || 'Please analyze this trading chart according to ICT concepts.' });
@@ -579,9 +764,27 @@ app.post('/api/pip/chat', pipLimiter, async (req, res) => {
       },
     });
 
-    const reply = response.text || 'I could not generate a response. Please try again.';
-    res.json({ reply });
+    if (!response.text) throw new Error('Pip could not generate a chart analysis. Please try again.');
+    const reply = response.text;
+    res.json({
+      reply,
+      ...(imageReservation ? { quota: {
+        unlimited: Boolean(imageReservation.unlimited),
+        planId: imageReservation.planId,
+        limit: imageReservation.limit,
+        used: imageReservation.used,
+        remaining: imageReservation.remaining,
+        resetsAt: imageReservation.resetsAt || null,
+      } } : {}),
+    });
   } catch (err) {
+    if (imageReservation?.usageRef) {
+      try { await releasePipImageSignal(imageReservation); }
+      catch (releaseError) { console.error('Could not release Pip image signal quota:', releaseError); }
+    }
+    if (err.status) {
+      return res.status(err.status).json({ error: err.message, ...(err.quota ? { quota: err.quota } : {}) });
+    }
     console.error('Pip chat error:', err);
     res.status(500).json({ error: err.message || 'Failed to generate response.' });
   }
