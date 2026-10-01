@@ -97,7 +97,7 @@ export function registerPaymentRoutes(app) {
       if (!payment.exists || payment.data().userId !== uid) return res.status(404).json({ error: 'Payment not found.' });
       const order = payment.data();
       if (order.paymentStatus === 'paid') return res.json({ status: 'paid' });
-      if (order.paymentStatus !== 'pending') return res.json({ status: order.paymentStatus });
+      if (order.paymentStatus !== 'pending') return res.json({ status: order.paymentStatus, reason: order.failureReason || null });
       if (order.expiresAt.toMillis() <= Date.now()) {
         await ref.update({ paymentStatus: 'expired', updatedAt: FieldValue.serverTimestamp() });
         return res.json({ status: 'expired' });
@@ -107,9 +107,13 @@ export function registerPaymentRoutes(app) {
       const transaction = result.data;
       const paidAmount = Number(transaction.amount);
       const currency = String(transaction.currency || '').toUpperCase();
-      if (transaction.toAccountId !== bakongAccountId || !Number.isFinite(paidAmount) || paidAmount !== order.amount || currency !== order.currency) {
-        await ref.update({ paymentStatus: 'failed', failureReason: 'verified_transaction_mismatch', updatedAt: FieldValue.serverTimestamp() });
-        return res.json({ status: 'failed' });
+      let failureReason = null;
+      if (transaction.toAccountId !== bakongAccountId) failureReason = 'recipient_mismatch';
+      else if (!Number.isFinite(paidAmount) || paidAmount !== order.amount) failureReason = 'amount_mismatch';
+      else if (currency !== order.currency) failureReason = 'currency_mismatch';
+      if (failureReason) {
+        await ref.update({ paymentStatus: 'failed', failureReason, updatedAt: FieldValue.serverTimestamp() });
+        return res.json({ status: 'failed', reason: failureReason });
       }
       const transactionId = transaction.hash || transaction.transactionId || order.providerPaymentId;
       const startDate = new Date();
