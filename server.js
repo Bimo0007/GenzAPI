@@ -245,6 +245,352 @@ app.get('/api/member/signals', pipLimiter, async (req, res) => {
   }
 });
 
+// =========================================================================
+// AUTHORITATIVE MARKET DATA & SIGNAL VALIDATION SERVICE
+// =========================================================================
+const SUPPORTED_ASSETS = ['XAUUSD', 'XAGUSD', 'BTCUSD'];
+
+function normalizeAssetSymbol(sym) {
+  if (!sym || typeof sym !== 'string') return '';
+  const clean = sym.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (clean.includes('XAU') || clean.includes('GOLD')) return 'XAUUSD';
+  if (clean.includes('XAG') || clean.includes('SILVER')) return 'XAGUSD';
+  if (clean.includes('BTC')) return 'BTCUSD';
+  return clean;
+}
+
+let marketPriceCache = {
+  data: {},
+  timestamp: 0,
+};
+
+async function fetchAuthoritativeMarketPrices() {
+  const now = Date.now();
+  if (now - marketPriceCache.timestamp < 3000 && Object.keys(marketPriceCache.data).length === 3) {
+    return marketPriceCache.data;
+  }
+
+  const prices = {};
+
+  // 1. Fetch Bitcoin (BTCUSDT) from Binance Live Ticker
+  try {
+    const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', {
+      signal: AbortSignal.timeout(4000),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const p = parseFloat(data.price);
+      if (Number.isFinite(p) && p > 10000) {
+        prices.BTCUSD = {
+          price: p,
+          currency: 'USD',
+          timestamp: now,
+          source: 'Binance Public Spot Ticker',
+          isAvailable: true,
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('[Server Market] BTC price fetch fallback notice:', err.message);
+  }
+
+  // Fallback for BTC if Binance timed out: Gold-API
+  if (!prices.BTCUSD) {
+    try {
+      const res = await fetch('https://api.gold-api.com/price/BTC', {
+        signal: AbortSignal.timeout(4000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const p = parseFloat(data.price);
+        if (Number.isFinite(p) && p > 10000) {
+          prices.BTCUSD = {
+            price: p,
+            currency: 'USD',
+            timestamp: now,
+            source: 'Gold-API Public Feed',
+            isAvailable: true,
+          };
+        }
+      }
+    } catch {}
+  }
+
+  // 2. Fetch Gold (XAUUSD) & Silver (XAGUSD) via TradingView CFD Scanner
+  try {
+    const tvPayload = {
+      filter: [{ left: 'name', operation: 'in_range', right: ['XAUUSD', 'SILVER'] }],
+      options: { lang: 'en' },
+      symbols: { query: { types: [] }, tickers: [] },
+      columns: ['close', 'name', 'description'],
+      sort: { sortBy: 'name', sortOrder: 'asc' },
+      range: [0, 10],
+    };
+    const res = await fetch('https://scanner.tradingview.com/cfd/scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(tvPayload),
+      signal: AbortSignal.timeout(4000),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.data)) {
+        for (const row of data.data) {
+          const sym = row.s;
+          const close = row.d?.[0];
+          if (sym.includes('XAUUSD') && close > 1000) {
+            prices.XAUUSD = {
+              price: close,
+              currency: 'USD',
+              timestamp: now,
+              source: 'TradingView CFD (OANDA:XAUUSD)',
+              isAvailable: true,
+            };
+          } else if ((sym.includes('SILVER') || sym.includes('XAGUSD')) && close > 10) {
+            prices.XAGUSD = {
+              price: close,
+              currency: 'USD',
+              timestamp: now,
+              source: 'TradingView CFD (TVC:SILVER)',
+              isAvailable: true,
+            };
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[Server Market] TV Metals scanner notice:', err.message);
+  }
+
+  // Fallback for Gold if TV scan missed it: Gold-API
+  if (!prices.XAUUSD) {
+    try {
+      const res = await fetch('https://api.gold-api.com/price/XAU', {
+        signal: AbortSignal.timeout(4000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const p = parseFloat(data.price);
+        if (Number.isFinite(p) && p > 1000) {
+          prices.XAUUSD = {
+            price: p,
+            currency: 'USD',
+            timestamp: now,
+            source: 'Gold-API Spot Feed',
+            isAvailable: true,
+          };
+        }
+      }
+    } catch {}
+  }
+
+  // Fallback for Silver if TV scan missed it: Gold-API
+  if (!prices.XAGUSD) {
+    try {
+      const res = await fetch('https://api.gold-api.com/price/XAG', {
+        signal: AbortSignal.timeout(4000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const p = parseFloat(data.price);
+        if (Number.isFinite(p) && p > 10) {
+          prices.XAGUSD = {
+            price: p,
+            currency: 'USD',
+            timestamp: now,
+            source: 'Gold-API Spot Feed',
+            isAvailable: true,
+          };
+        }
+      }
+    } catch {}
+  }
+
+  // Update in-memory cache
+  marketPriceCache = {
+    data: prices,
+    timestamp: now,
+  };
+
+  return prices;
+}
+
+function validateTradingSignalServer(signal, spotPrice) {
+  if (!signal || typeof signal !== 'object') {
+    return { isValid: false, reasonCode: 'SIGNAL_EMPTY', message: 'Signal object missing.' };
+  }
+
+  const rawPair = signal.pair || signal.symbol;
+  const pair = normalizeAssetSymbol(rawPair);
+  if (!SUPPORTED_ASSETS.includes(pair)) {
+    return {
+      isValid: false,
+      reasonCode: 'UNSUPPORTED_PAIR',
+      message: `Asset ${rawPair} is not supported. Supported: XAU/USD, XAG/USD, BTC/USD.`,
+    };
+  }
+
+  const direction = String(signal.direction || signal.type || signal.action || '').toUpperCase();
+  if (direction !== 'BUY' && direction !== 'SELL') {
+    return { isValid: false, reasonCode: 'INVALID_DIRECTION', message: `Invalid trade direction '${direction}'.` };
+  }
+
+  const entry = Number(signal.entry ?? signal.entry_price ?? signal.entryPrice);
+  const sl = Number(signal.sl ?? signal.stop_loss ?? signal.stopLoss);
+  const tp = Number(signal.tp ?? signal.tp1 ?? signal.take_profit ?? signal.takeProfit);
+
+  if (!Number.isFinite(entry) || entry <= 0) {
+    return { isValid: false, reasonCode: 'INVALID_ENTRY', message: `Invalid entry level: ${entry}` };
+  }
+  if (!Number.isFinite(sl) || sl <= 0) {
+    return { isValid: false, reasonCode: 'INVALID_SL', message: `Invalid stop-loss level: ${sl}` };
+  }
+  if (!Number.isFinite(tp) || tp <= 0) {
+    return { isValid: false, reasonCode: 'INVALID_TP', message: `Invalid take-profit level: ${tp}` };
+  }
+
+  // Check market price consistency if spotPrice available
+  if (Number.isFinite(spotPrice) && spotPrice > 0) {
+    const deviation = Math.abs(entry - spotPrice) / spotPrice;
+    if (deviation > 0.0035) {
+      return {
+        isValid: false,
+        reasonCode: 'PRICE_DEVIATION_TOO_LARGE',
+        message: `Entry ${entry} deviates ${(deviation * 100).toFixed(2)}% from live market price ${spotPrice}.`,
+      };
+    }
+  }
+
+  // Level geometry
+  if (direction === 'BUY') {
+    if (sl >= entry) {
+      return { isValid: false, reasonCode: 'INVALID_BUY_GEOMETRY', message: `For BUY setup, Stop Loss (${sl}) must be strictly below Entry (${entry}).` };
+    }
+    if (tp <= entry) {
+      return { isValid: false, reasonCode: 'INVALID_BUY_GEOMETRY', message: `For BUY setup, Take Profit (${tp}) must be strictly above Entry (${entry}).` };
+    }
+  } else {
+    if (sl <= entry) {
+      return { isValid: false, reasonCode: 'INVALID_SELL_GEOMETRY', message: `For SELL setup, Stop Loss (${sl}) must be strictly above Entry (${entry}).` };
+    }
+    if (tp >= entry) {
+      return { isValid: false, reasonCode: 'INVALID_SELL_GEOMETRY', message: `For SELL setup, Take Profit (${tp}) must be strictly below Entry (${entry}).` };
+    }
+  }
+
+  // Minimum distances
+  const slDist = Math.abs(entry - sl);
+  const tpDist = Math.abs(tp - entry);
+
+  let minSlDist = 1.5;
+  let minTpDist = 3.0;
+  if (pair === 'XAGUSD') {
+    minSlDist = 0.10;
+    minTpDist = 0.20;
+  } else if (pair === 'BTCUSD') {
+    minSlDist = 200.0;
+    minTpDist = 400.0;
+  }
+
+  if (slDist < minSlDist) {
+    return { isValid: false, reasonCode: 'SL_TOO_TIGHT', message: `Stop Loss distance ${slDist.toFixed(2)} is less than minimum ${minSlDist}.` };
+  }
+  if (tpDist < minTpDist) {
+    return { isValid: false, reasonCode: 'TP_TOO_TIGHT', message: `Take Profit distance ${tpDist.toFixed(2)} is less than minimum ${minTpDist}.` };
+  }
+
+  // Risk / Reward ratio
+  const rr = tpDist / slDist;
+  const minRr = signal.style === 'scalping' ? 1.4 : 1.5;
+  if (rr < minRr) {
+    return { isValid: false, reasonCode: 'INSUFFICIENT_RR', message: `R:R ratio 1:${rr.toFixed(2)} is below minimum 1:${minRr.toFixed(1)}.` };
+  }
+
+  return {
+    isValid: true,
+    normalized: {
+      pair,
+      direction,
+      entry,
+      sl,
+      tp,
+      rr: `1:${rr.toFixed(1)}`,
+      validatedAt: Date.now(),
+    },
+  };
+}
+
+// 1. Authoritative All Prices Endpoint
+app.get('/api/market/prices', async (req, res) => {
+  try {
+    const prices = await fetchAuthoritativeMarketPrices();
+    res.json({
+      success: true,
+      timestamp: Date.now(),
+      supportedAssets: SUPPORTED_ASSETS,
+      prices,
+    });
+  } catch (err) {
+    console.error('Market prices fetch failed:', err);
+    res.status(500).json({ error: 'Failed to retrieve authoritative market prices.' });
+  }
+});
+
+// 2. Authoritative Single Price Endpoint
+app.get('/api/market/price', async (req, res) => {
+  const rawPair = req.query.pair || req.query.symbol;
+  const pair = normalizeAssetSymbol(rawPair);
+  if (!pair || !SUPPORTED_ASSETS.includes(pair)) {
+    return res.status(400).json({
+      error: `Unsupported pair '${rawPair}'. Supported assets: XAUUSD, XAGUSD, BTCUSD.`,
+    });
+  }
+
+  try {
+    const prices = await fetchAuthoritativeMarketPrices();
+    const item = prices[pair];
+    if (!item) {
+      return res.status(503).json({
+        error: `Live price for ${pair} is temporarily unavailable.`,
+        isAvailable: false,
+      });
+    }
+
+    res.json({
+      pair,
+      price: item.price,
+      currency: item.currency,
+      timestamp: item.timestamp,
+      source: item.source,
+      isAvailable: item.isAvailable,
+      isStale: Date.now() - item.timestamp > 15000,
+    });
+  } catch (err) {
+    console.error(`Price fetch error for ${pair}:`, err);
+    res.status(500).json({ error: 'Failed to retrieve live market price.' });
+  }
+});
+
+// 3. Authoritative Signal Validation Endpoint
+app.post('/api/signals/validate', async (req, res) => {
+  const signal = req.body?.signal || req.body;
+  if (!signal) {
+    return res.status(400).json({ isValid: false, reasonCode: 'NO_PAYLOAD', message: 'Missing signal in request body.' });
+  }
+
+  try {
+    const prices = await fetchAuthoritativeMarketPrices();
+    const pair = normalizeAssetSymbol(signal.pair || signal.symbol);
+    const spotPrice = prices[pair]?.price;
+
+    const validation = validateTradingSignalServer(signal, spotPrice);
+    res.json(validation);
+  } catch (err) {
+    console.error('Signal validation error:', err);
+    res.status(500).json({ isValid: false, reasonCode: 'SERVER_ERROR', message: 'Signal validation service error.' });
+  }
+});
+
 // Articles about gold/silver specifically as a market/price (not the word
 // "gold"/"silver" used loosely, e.g. "digital gold" for Bitcoin, "silver
 // lining" idioms, Olympic medals), or the US macro drivers (Fed decisions,
