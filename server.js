@@ -272,154 +272,7 @@ let marketPriceCache = {
 };
 
 async function fetchAuthoritativeMarketPrices() {
-  const now = Date.now();
-  if (now - marketPriceCache.timestamp < 3000 && Object.keys(marketPriceCache.data).length === 3) {
-    return marketPriceCache.data;
-  }
-
-  const prices = {};
-
-  // 1. Fetch Bitcoin (BTCUSDT) from Binance Live Ticker
-  try {
-    const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', {
-      signal: AbortSignal.timeout(4000),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      const p = parseFloat(data.price);
-      if (Number.isFinite(p) && p > 10000) {
-        prices.BTCUSD = {
-          price: p,
-          currency: 'USD',
-          timestamp: now,
-          source: 'Binance Public Spot Ticker',
-          isAvailable: true,
-        };
-      }
-    }
-  } catch (err) {
-    console.warn('[Server Market] BTC price fetch fallback notice:', err.message);
-  }
-
-  // Fallback for BTC if Binance timed out: Gold-API
-  if (!prices.BTCUSD) {
-    try {
-      const res = await fetch('https://api.gold-api.com/price/BTC', {
-        signal: AbortSignal.timeout(4000),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const p = parseFloat(data.price);
-        if (Number.isFinite(p) && p > 10000) {
-          prices.BTCUSD = {
-            price: p,
-            currency: 'USD',
-            timestamp: now,
-            source: 'Gold-API Public Feed',
-            isAvailable: true,
-          };
-        }
-      }
-    } catch {}
-  }
-
-  // 2. Fetch Gold (XAUUSD) & Silver (XAGUSD) via TradingView CFD Scanner
-  try {
-    const tvPayload = {
-      filter: [{ left: 'name', operation: 'in_range', right: ['XAUUSD', 'SILVER'] }],
-      options: { lang: 'en' },
-      symbols: { query: { types: [] }, tickers: [] },
-      columns: ['close', 'name', 'description'],
-      sort: { sortBy: 'name', sortOrder: 'asc' },
-      range: [0, 10],
-    };
-    const res = await fetch('https://scanner.tradingview.com/cfd/scan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(tvPayload),
-      signal: AbortSignal.timeout(4000),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data.data)) {
-        for (const row of data.data) {
-          const sym = row.s;
-          const close = row.d?.[0];
-          if (sym.includes('XAUUSD') && close > 1000) {
-            prices.XAUUSD = {
-              price: close,
-              currency: 'USD',
-              timestamp: now,
-              source: 'TradingView CFD (OANDA:XAUUSD)',
-              isAvailable: true,
-            };
-          } else if ((sym.includes('SILVER') || sym.includes('XAGUSD')) && close > 10) {
-            prices.XAGUSD = {
-              price: close,
-              currency: 'USD',
-              timestamp: now,
-              source: 'TradingView CFD (TVC:SILVER)',
-              isAvailable: true,
-            };
-          }
-        }
-      }
-    }
-  } catch (err) {
-    console.warn('[Server Market] TV Metals scanner notice:', err.message);
-  }
-
-  // Fallback for Gold if TV scan missed it: Gold-API
-  if (!prices.XAUUSD) {
-    try {
-      const res = await fetch('https://api.gold-api.com/price/XAU', {
-        signal: AbortSignal.timeout(4000),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const p = parseFloat(data.price);
-        if (Number.isFinite(p) && p > 1000) {
-          prices.XAUUSD = {
-            price: p,
-            currency: 'USD',
-            timestamp: now,
-            source: 'Gold-API Spot Feed',
-            isAvailable: true,
-          };
-        }
-      }
-    } catch {}
-  }
-
-  // Fallback for Silver if TV scan missed it: Gold-API
-  if (!prices.XAGUSD) {
-    try {
-      const res = await fetch('https://api.gold-api.com/price/XAG', {
-        signal: AbortSignal.timeout(4000),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const p = parseFloat(data.price);
-        if (Number.isFinite(p) && p > 10) {
-          prices.XAGUSD = {
-            price: p,
-            currency: 'USD',
-            timestamp: now,
-            source: 'Gold-API Spot Feed',
-            isAvailable: true,
-          };
-        }
-      }
-    } catch {}
-  }
-
-  // Update in-memory cache
-  marketPriceCache = {
-    data: prices,
-    timestamp: now,
-  };
-
-  return prices;
+  return fetchBackendMarketPrices();
 }
 
 function validateTradingSignalServer(signal, spotPrice) {
@@ -490,13 +343,13 @@ function validateTradingSignalServer(signal, spotPrice) {
   const tpDist = Math.abs(tp - entry);
 
   let minSlDist = 1.5;
-  let minTpDist = 3.0;
+  let minTpDist = 2.25;
   if (pair === 'XAGUSD') {
-    minSlDist = 0.10;
-    minTpDist = 0.20;
+    minSlDist = 0.08;
+    minTpDist = 0.12;
   } else if (pair === 'BTCUSD') {
-    minSlDist = 200.0;
-    minTpDist = 400.0;
+    minSlDist = 80.0;
+    minTpDist = 120.0;
   }
 
   if (slDist < minSlDist) {
@@ -528,10 +381,11 @@ function validateTradingSignalServer(signal, spotPrice) {
 }
 
 // 1. Authoritative All Prices Endpoint
-app.get('/api/market/prices', async (req, res) => {
+app.get('/api/market/prices', marketLimiter, async (req, res) => {
   try {
-    const prices = await fetchAuthoritativeMarketPrices();
+    const prices = await fetchBackendMarketPrices();
     res.json({
+      ok: true,
       success: true,
       timestamp: Date.now(),
       supportedAssets: SUPPORTED_ASSETS,
@@ -539,7 +393,7 @@ app.get('/api/market/prices', async (req, res) => {
     });
   } catch (err) {
     console.error('Market prices fetch failed:', err);
-    res.status(500).json({ error: 'Failed to retrieve authoritative market prices.' });
+    res.status(500).json({ ok: false, error: 'Failed to retrieve authoritative market prices.' });
   }
 });
 
@@ -1252,11 +1106,13 @@ async function fetchBackendMarketPrices() {
           result.XAUUSD = {
             pair: 'XAUUSD',
             price: Math.round(close * 100) / 100,
+            currency: 'USD',
             changePercent,
             changeAbs,
             high: typeof d[3] === 'number' ? d[3] : close,
             low: typeof d[4] === 'number' ? d[4] : close,
             source: 'OANDA / TradingView',
+            isAvailable: true,
             timestamp: now,
           };
         } else if ((sym.includes('XAGUSD') || sym.includes('SILVER')) && close > 10 && close < 150) {
@@ -1264,11 +1120,13 @@ async function fetchBackendMarketPrices() {
             result.XAGUSD = {
               pair: 'XAGUSD',
               price: Math.round(close * 1000) / 1000,
+              currency: 'USD',
               changePercent,
               changeAbs,
               high: typeof d[3] === 'number' ? d[3] : close,
               low: typeof d[4] === 'number' ? d[4] : close,
               source: 'OANDA / TradingView',
+              isAvailable: true,
               timestamp: now,
             };
           }
@@ -1277,29 +1135,32 @@ async function fetchBackendMarketPrices() {
     })
     .catch(() => {});
 
-  // 2. Fetch BTCUSD from TradingView Crypto Scanner + Coinbase/Binance fallback
+  // 2. Fetch BTCUSD from TradingView Crypto Scanner (Strictly prioritize BINANCE:BTCUSDT to match chart 1:1)
   const cryptoPromise = fetch('https://scanner.tradingview.com/crypto/scan', {
     method: 'POST',
     headers: TV_HEADERS,
     body: JSON.stringify({
-      symbols: { tickers: ['BINANCE:BTCUSDT', 'COINBASE:BTCUSD'] },
+      symbols: { tickers: ['BINANCE:BTCUSDT'] },
       columns: ['close', 'change', 'change_abs', 'high', 'low'],
     }),
   })
     .then((r) => (r.ok ? r.json() : null))
     .then((json) => {
       const rows = json?.data || [];
-      const validRow = rows.find((r) => typeof r?.d?.[0] === 'number' && r.d[0] > 10000);
+      const binanceRow = rows.find((r) => r?.s === 'BINANCE:BTCUSDT' && typeof r?.d?.[0] === 'number' && r.d[0] > 10000);
+      const validRow = binanceRow || rows.find((r) => typeof r?.d?.[0] === 'number' && r.d[0] > 10000);
       if (validRow) {
         const d = validRow.d;
         result.BTCUSD = {
           pair: 'BTCUSD',
           price: Math.round(d[0] * 100) / 100,
+          currency: 'USD',
           changePercent: typeof d[1] === 'number' ? d[1] : 0,
           changeAbs: typeof d[2] === 'number' ? d[2] : 0,
           high: typeof d[3] === 'number' ? d[3] : d[0],
           low: typeof d[4] === 'number' ? d[4] : d[0],
           source: 'Binance / TradingView',
+          isAvailable: true,
           timestamp: now,
         };
       }
@@ -1319,8 +1180,10 @@ async function fetchBackendMarketPrices() {
             result.XAUUSD = {
               pair: 'XAUUSD',
               price: Math.round(d.price * 100) / 100,
+              currency: 'USD',
               changePercent: typeof d.change_percent === 'number' ? d.change_percent : 0,
               source: 'Gold-API Spot Feed',
+              isAvailable: true,
               timestamp: now,
             };
           }
@@ -1338,8 +1201,10 @@ async function fetchBackendMarketPrices() {
             result.XAGUSD = {
               pair: 'XAGUSD',
               price: Math.round(d.price * 1000) / 1000,
+              currency: 'USD',
               changePercent: typeof d.change_percent === 'number' ? d.change_percent : 0,
               source: 'Gold-API Silver Feed',
+              isAvailable: true,
               timestamp: now,
             };
           }
@@ -1358,8 +1223,10 @@ async function fetchBackendMarketPrices() {
             result.BTCUSD = {
               pair: 'BTCUSD',
               price: Math.round(amt * 100) / 100,
+              currency: 'USD',
               changePercent: 0,
               source: 'Coinbase Live Spot',
+              isAvailable: true,
               timestamp: now,
             };
           }
@@ -1380,20 +1247,6 @@ async function fetchBackendMarketPrices() {
   return result;
 }
 
-app.get('/api/market/prices', marketLimiter, async (req, res) => {
-  try {
-    const prices = await fetchBackendMarketPrices();
-    res.json({
-      ok: true,
-      prices,
-      timestamp: Date.now(),
-    });
-  } catch (err) {
-    console.error('[/api/market/prices] Error:', err);
-    res.status(500).json({ ok: false, error: 'Failed to fetch live market prices.' });
-  }
-});
-
 app.get('/api/market/scanner', marketLimiter, async (req, res) => {
   const rawPair = String(req.query.pair || 'XAUUSD').toUpperCase().replace(/[^A-Z0-9]/g, '');
   const pair = rawPair.includes('XAG') || rawPair.includes('SILVER')
@@ -1413,7 +1266,7 @@ app.get('/api/market/scanner', marketLimiter, async (req, res) => {
     ? ['OANDA:XAUUSD']
     : pair === 'XAGUSD'
       ? ['TVC:SILVER', 'OANDA:XAGUSD']
-      : ['BINANCE:BTCUSDT', 'COINBASE:BTCUSD'];
+      : ['BINANCE:BTCUSDT'];
 
   const columns = [
     'close|15', 'open|15', 'high|15', 'low|15', 'change|15', 'change_abs|15',
