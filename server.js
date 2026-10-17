@@ -1,4 +1,7 @@
 import 'dotenv/config';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
@@ -7,6 +10,9 @@ import { registerPaymentRoutes } from './payment.js';
 import { registerPasswordResetRoutes } from './passwordReset.js';
 import { registerAdminUserRoutes } from './adminUsers.js';
 import { adminDb, firebaseAdminReady, verifyIdToken } from './firebaseAdmin.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const PORT = process.env.PORT || 3001;
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
@@ -1318,7 +1324,252 @@ app.get('/api/market/scanner', marketLimiter, async (req, res) => {
   }
 });
 
+// =========================================================================
+// AUDITED ICT XAUUSD BACKTEST ENGINE API & ATOMIC PUBLISHER
+// =========================================================================
+const BACKTEST_FILE_PATH = path.join(__dirname, 'data', 'xauusd_ict_backtest.json');
+let lastSuccessfulBacktest = null;
+let backtestEngineStatus = {
+  state: 'COMPLETED', // 'RUNNING' | 'COMPLETED' | 'FAILED'
+  lastAttemptUtc: null,
+  lastSuccessUtc: null,
+  lastError: null,
+};
+const liveTradingViewSignals = [];
+const seenTradingViewSignalIds = new Set();
+
+function validateAndDeduplicateBacktestPayload(payload) {
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('Backtest payload is missing or invalid.');
+  }
+  if (payload.symbol !== 'XAUUSD') {
+    throw new Error(`Invalid backtest symbol '${payload.symbol}'. Expected XAUUSD.`);
+  }
+  if (!Array.isArray(payload.trades) || payload.trades.length === 0) {
+    throw new Error('Backtest payload contains no closed trade records.');
+  }
+  if (!payload.metrics || !payload.metrics.overall) {
+    throw new Error('Backtest payload is missing performance metrics.');
+  }
+
+  // Deduplicate trade records by trade_id and (entry_ts + direction)
+  const seenIds = new Set();
+  const seenKeys = new Set();
+  const cleanTrades = [];
+  for (const t of payload.trades) {
+    if (!t || !t.trade_id) continue;
+    const uniqueKey = `${t.symbol}-${t.timeframe}-${t.entry_ts}-${t.direction}`;
+    if (seenIds.has(t.trade_id) || seenKeys.has(uniqueKey)) {
+      continue;
+    }
+    seenIds.add(t.trade_id);
+    seenKeys.add(uniqueKey);
+    cleanTrades.push(t);
+  }
+
+  // Verify closed-trade count and net profit consistency
+  const wins = cleanTrades.filter((t) => Number(t.net_pnl) > 0).length;
+  const losses = cleanTrades.filter((t) => Number(t.net_pnl) < 0).length;
+  const computedNet = Number(cleanTrades.reduce((acc, t) => acc + Number(t.net_pnl || 0), 0).toFixed(2));
+  const reportedNet = Number(Number(payload.metrics.overall.net_profit || 0).toFixed(2));
+
+  if (Math.abs(computedNet - reportedNet) > 0.5) {
+    throw new Error(`Backtest metric validation failed: computed net profit (${computedNet}) != reported (${reportedNet}).`);
+  }
+
+  return {
+    ...payload,
+    status: 'COMPLETED',
+    data_category: 'HISTORICAL_BACKTEST',
+    trades: cleanTrades,
+    backend_verified: {
+      verified_at_utc: new Date().toISOString(),
+      verified_closed_trades: cleanTrades.length,
+      verified_wins: wins,
+      verified_losses: losses,
+      verified_net_profit: computedNet,
+    },
+  };
+}
+
+function loadPublishedBacktestFromDisk() {
+  try {
+    if (fs.existsSync(BACKTEST_FILE_PATH)) {
+      const raw = JSON.parse(fs.readFileSync(BACKTEST_FILE_PATH, 'utf-8'));
+      const validated = validateAndDeduplicateBacktestPayload(raw);
+      lastSuccessfulBacktest = validated;
+      backtestEngineStatus = {
+        state: 'COMPLETED',
+        lastAttemptUtc: validated.last_successful_backtest_utc || new Date().toISOString(),
+        lastSuccessUtc: validated.last_successful_backtest_utc || new Date().toISOString(),
+        lastError: null,
+      };
+      return validated;
+    }
+  } catch (err) {
+    console.error('[Backtest API] Failed to load or validate backtest file:', err.message);
+    backtestEngineStatus.lastError = err.message;
+  }
+  return lastSuccessfulBacktest;
+}
+
+// Initialize on startup
+loadPublishedBacktestFromDisk();
+
+app.get('/api/backtest/xauusd', marketLimiter, (req, res) => {
+  const current = lastSuccessfulBacktest || loadPublishedBacktestFromDisk();
+  if (!current) {
+    return res.status(404).json({
+      ok: false,
+      status: backtestEngineStatus.state,
+      error: 'No verified XAUUSD backtest is currently published.',
+    });
+  }
+
+  const splitFilter = String(req.query.split || 'ALL').toUpperCase();
+  const searchQuery = String(req.query.search || '').trim().toLowerCase();
+
+  let filteredTrades = current.trades || [];
+  if (splitFilter !== 'ALL') {
+    filteredTrades = filteredTrades.filter((t) => String(t.period_split || '').toUpperCase() === splitFilter);
+  }
+  if (searchQuery) {
+    filteredTrades = filteredTrades.filter(
+      (t) =>
+        String(t.trade_id || '').toLowerCase().includes(searchQuery) ||
+        String(t.direction || '').toLowerCase().includes(searchQuery) ||
+        String(t.session || '').toLowerCase().includes(searchQuery) ||
+        String(t.sweep_type || '').toLowerCase().includes(searchQuery) ||
+        String(t.outcome || '').toLowerCase().includes(searchQuery) ||
+        String(t.entry_time_utc || '').toLowerCase().includes(searchQuery)
+    );
+  }
+
+  res.json({
+    ok: true,
+    engine_status: backtestEngineStatus,
+    backtest: {
+      ...current,
+      filtered_trades_count: filteredTrades.length,
+      trades: filteredTrades,
+    },
+    live_tradingview_signals: liveTradingViewSignals.slice(0, 25),
+  });
+});
+
+app.post('/api/backtest/xauusd/publish', costlyLimiter, async (req, res) => {
+  backtestEngineStatus.state = 'RUNNING';
+  backtestEngineStatus.lastAttemptUtc = new Date().toISOString();
+
+  try {
+    const incoming = req.body?.backtest || req.body;
+    const validated = validateAndDeduplicateBacktestPayload(incoming);
+
+    // Atomic file write via temporary file + rename so partial writes never corrupt the store
+    const tmpPath = `${BACKTEST_FILE_PATH}.tmp`;
+    fs.mkdirSync(path.dirname(BACKTEST_FILE_PATH), { recursive: true });
+    fs.writeFileSync(tmpPath, JSON.stringify(validated, null, 2), 'utf-8');
+    fs.renameSync(tmpPath, BACKTEST_FILE_PATH);
+
+    // Also persist to Firestore transactionally if Firebase Admin is configured
+    if (firebaseAdminReady && adminDb) {
+      const runRef = adminDb.collection('backtestRuns').doc(validated.run_id || 'latest_xauusd_ict');
+      const latestPointerRef = adminDb.collection('backtestRuns').doc('latest_published_xauusd');
+      await adminDb.runTransaction(async (tx) => {
+        tx.set(runRef, {
+          ...validated,
+          publishedAt: new Date(),
+        });
+        tx.set(latestPointerRef, {
+          run_id: validated.run_id,
+          strategy_version: validated.strategy_version,
+          symbol: validated.symbol,
+          selected_timeframe: validated.selected_timeframe,
+          last_successful_backtest_utc: validated.last_successful_backtest_utc,
+          metrics_overall: validated.metrics.overall,
+          publishedAt: new Date(),
+        });
+      });
+    }
+
+    lastSuccessfulBacktest = validated;
+    backtestEngineStatus = {
+      state: 'COMPLETED',
+      lastAttemptUtc: backtestEngineStatus.lastAttemptUtc,
+      lastSuccessUtc: new Date().toISOString(),
+      lastError: null,
+    };
+
+    res.json({
+      ok: true,
+      status: 'COMPLETED',
+      run_id: validated.run_id,
+      verified_closed_trades: validated.trades.length,
+    });
+  } catch (err) {
+    // Preserve lastSuccessfulBacktest untouched if new run fails!
+    backtestEngineStatus = {
+      state: lastSuccessfulBacktest ? 'COMPLETED' : 'FAILED',
+      lastAttemptUtc: backtestEngineStatus.lastAttemptUtc,
+      lastSuccessUtc: backtestEngineStatus.lastSuccessUtc,
+      lastError: err.message,
+    };
+    res.status(400).json({
+      ok: false,
+      status: 'FAILED',
+      preserved_last_valid_run: Boolean(lastSuccessfulBacktest),
+      error: err.message,
+    });
+  }
+});
+
+app.post('/api/backtest/xauusd/webhook', pipLimiter, (req, res) => {
+  const alert = req.body;
+  if (!alert || typeof alert !== 'object') {
+    return res.status(400).json({ ok: false, error: 'Missing TradingView alert JSON payload.' });
+  }
+
+  const signalId = String(alert.signal_id || '').trim();
+  const symbol = normalizeAssetSymbol(alert.symbol || 'XAUUSD');
+  const direction = String(alert.direction || '').toUpperCase();
+  const entryPrice = Number(alert.entry_price);
+  const stopLoss = Number(alert.stop_loss);
+  const takeProfit = Number(alert.take_profit);
+
+  if (!signalId || symbol !== 'XAUUSD' || (direction !== 'BUY' && direction !== 'SELL')) {
+    return res.status(400).json({ ok: false, error: 'Invalid XAUUSD TradingView alert fields.' });
+  }
+  if (!Number.isFinite(entryPrice) || !Number.isFinite(stopLoss) || !Number.isFinite(takeProfit)) {
+    return res.status(400).json({ ok: false, error: 'Invalid numeric price levels in alert.' });
+  }
+  if (seenTradingViewSignalIds.has(signalId)) {
+    return res.status(200).json({ ok: true, duplicate: true, message: 'Signal ID already processed.' });
+  }
+
+  seenTradingViewSignalIds.add(signalId);
+  const record = {
+    signal_id: signalId,
+    data_category: 'LIVE_TRADINGVIEW_ALERT',
+    symbol: 'XAUUSD',
+    timeframe: String(alert.timeframe || '5M'),
+    direction,
+    signal_time_utc: String(alert.signal_time_utc || new Date().toISOString()),
+    entry_price: entryPrice,
+    stop_loss: stopLoss,
+    take_profit: takeProfit,
+    rr_target: Number(alert.rr_target || 2.0),
+    session: String(alert.session || 'Killzone'),
+    strategy_version: String(alert.strategy_version || 'ICT-XAUUSD-FVG-MSS-v1.2'),
+    received_at_utc: new Date().toISOString(),
+  };
+  liveTradingViewSignals.unshift(record);
+  if (liveTradingViewSignals.length > 100) liveTradingViewSignals.pop();
+
+  res.json({ ok: true, duplicate: false, signal: record });
+});
+
 app.listen(PORT, () => {
   console.log(`genztrader-news-api listening on port ${PORT}`);
 });
+
 
