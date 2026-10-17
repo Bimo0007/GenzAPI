@@ -65,7 +65,14 @@ app.use(express.json({ limit: '10mb' }));
 // NewsAPI, Finnhub) or writes to Firestore — without a cap, a script could
 // burn through daily quotas or hammer the payment-grant endpoint. Generous
 // enough for normal browsing, tight enough to blunt scripted abuse.
-const generalLimiter = rateLimit({ windowMs: 60 * 1000, limit: 60, standardHeaders: true, legacyHeaders: false });
+const generalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.path.startsWith('/api/market'),
+});
+const marketLimiter = rateLimit({ windowMs: 60 * 1000, limit: 240, standardHeaders: true, legacyHeaders: false });
 const costlyLimiter = rateLimit({ windowMs: 60 * 1000, limit: 12, standardHeaders: true, legacyHeaders: false });
 const pipLimiter = rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false });
 app.use(generalLimiter);
@@ -1185,6 +1192,280 @@ app.post('/api/pip/chat', pipLimiter, async (req, res) => {
   }
 });
 
+// ============================================================================
+// REAL-TIME MARKET PRICES & TECHNICAL SCANNER PROXY (XAUUSD, XAGUSD, BTCUSD)
+// Solves production browser CORS / ISP blocks on TradingView & Binance APIs.
+// ============================================================================
+const TV_HEADERS = {
+  'Content-Type': 'text/plain',
+  Origin: 'https://www.tradingview.com',
+  Referer: 'https://www.tradingview.com/',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+};
+
+let marketPricesCache = {
+  timestamp: 0,
+  data: null,
+};
+const MARKET_PRICES_TTL_MS = 2000;
+
+const scannerCache = {
+  XAUUSD: { timestamp: 0, data: null },
+  XAGUSD: { timestamp: 0, data: null },
+  BTCUSD: { timestamp: 0, data: null },
+};
+const SCANNER_TTL_MS = 4000;
+
+async function fetchBackendMarketPrices() {
+  const now = Date.now();
+  if (marketPricesCache.data && now - marketPricesCache.timestamp < MARKET_PRICES_TTL_MS) {
+    return marketPricesCache.data;
+  }
+
+  const result = {
+    XAUUSD: marketPricesCache.data?.XAUUSD || null,
+    XAGUSD: marketPricesCache.data?.XAGUSD || null,
+    BTCUSD: marketPricesCache.data?.BTCUSD || null,
+  };
+
+  // 1. Fetch XAUUSD & XAGUSD from TradingView CFD Scanner
+  const cfdPromise = fetch('https://scanner.tradingview.com/cfd/scan', {
+    method: 'POST',
+    headers: TV_HEADERS,
+    body: JSON.stringify({
+      symbols: { tickers: ['OANDA:XAUUSD', 'OANDA:XAGUSD', 'TVC:SILVER'] },
+      columns: ['close', 'change', 'change_abs', 'high', 'low'],
+    }),
+  })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((json) => {
+      const rows = json?.data || [];
+      for (const row of rows) {
+        const sym = row?.s || '';
+        const d = row?.d || [];
+        const close = d[0];
+        const changePercent = typeof d[1] === 'number' ? d[1] : 0;
+        const changeAbs = typeof d[2] === 'number' ? d[2] : 0;
+        if (typeof close !== 'number' || close <= 0) continue;
+
+        if (sym.includes('XAUUSD') && close > 1000 && close < 10000) {
+          result.XAUUSD = {
+            pair: 'XAUUSD',
+            price: Math.round(close * 100) / 100,
+            changePercent,
+            changeAbs,
+            high: typeof d[3] === 'number' ? d[3] : close,
+            low: typeof d[4] === 'number' ? d[4] : close,
+            source: 'OANDA / TradingView',
+            timestamp: now,
+          };
+        } else if ((sym.includes('XAGUSD') || sym.includes('SILVER')) && close > 10 && close < 150) {
+          if (!result.XAGUSD || sym.includes('OANDA')) {
+            result.XAGUSD = {
+              pair: 'XAGUSD',
+              price: Math.round(close * 1000) / 1000,
+              changePercent,
+              changeAbs,
+              high: typeof d[3] === 'number' ? d[3] : close,
+              low: typeof d[4] === 'number' ? d[4] : close,
+              source: 'OANDA / TradingView',
+              timestamp: now,
+            };
+          }
+        }
+      }
+    })
+    .catch(() => {});
+
+  // 2. Fetch BTCUSD from TradingView Crypto Scanner + Coinbase/Binance fallback
+  const cryptoPromise = fetch('https://scanner.tradingview.com/crypto/scan', {
+    method: 'POST',
+    headers: TV_HEADERS,
+    body: JSON.stringify({
+      symbols: { tickers: ['BINANCE:BTCUSDT', 'COINBASE:BTCUSD'] },
+      columns: ['close', 'change', 'change_abs', 'high', 'low'],
+    }),
+  })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((json) => {
+      const rows = json?.data || [];
+      const validRow = rows.find((r) => typeof r?.d?.[0] === 'number' && r.d[0] > 10000);
+      if (validRow) {
+        const d = validRow.d;
+        result.BTCUSD = {
+          pair: 'BTCUSD',
+          price: Math.round(d[0] * 100) / 100,
+          changePercent: typeof d[1] === 'number' ? d[1] : 0,
+          changeAbs: typeof d[2] === 'number' ? d[2] : 0,
+          high: typeof d[3] === 'number' ? d[3] : d[0],
+          low: typeof d[4] === 'number' ? d[4] : d[0],
+          source: 'Binance / TradingView',
+          timestamp: now,
+        };
+      }
+    })
+    .catch(() => {});
+
+  await Promise.allSettled([cfdPromise, cryptoPromise]);
+
+  // Fallbacks if any asset was missed by TradingView
+  const fallbacks = [];
+  if (!result.XAUUSD || now - (result.XAUUSD.timestamp || 0) > 10000) {
+    fallbacks.push(
+      fetch('https://api.gold-api.com/price/XAU')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (d && typeof d.price === 'number' && d.price > 1000) {
+            result.XAUUSD = {
+              pair: 'XAUUSD',
+              price: Math.round(d.price * 100) / 100,
+              changePercent: typeof d.change_percent === 'number' ? d.change_percent : 0,
+              source: 'Gold-API Spot Feed',
+              timestamp: now,
+            };
+          }
+        })
+        .catch(() => {})
+    );
+  }
+
+  if (!result.XAGUSD || now - (result.XAGUSD.timestamp || 0) > 10000) {
+    fallbacks.push(
+      fetch('https://api.gold-api.com/price/XAG')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (d && typeof d.price === 'number' && d.price > 10 && d.price < 150) {
+            result.XAGUSD = {
+              pair: 'XAGUSD',
+              price: Math.round(d.price * 1000) / 1000,
+              changePercent: typeof d.change_percent === 'number' ? d.change_percent : 0,
+              source: 'Gold-API Silver Feed',
+              timestamp: now,
+            };
+          }
+        })
+        .catch(() => {})
+    );
+  }
+
+  if (!result.BTCUSD || now - (result.BTCUSD.timestamp || 0) > 10000) {
+    fallbacks.push(
+      fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          const amt = parseFloat(d?.data?.amount);
+          if (!isNaN(amt) && amt > 10000) {
+            result.BTCUSD = {
+              pair: 'BTCUSD',
+              price: Math.round(amt * 100) / 100,
+              changePercent: 0,
+              source: 'Coinbase Live Spot',
+              timestamp: now,
+            };
+          }
+        })
+        .catch(() => {})
+    );
+  }
+
+  if (fallbacks.length > 0) {
+    await Promise.allSettled(fallbacks);
+  }
+
+  marketPricesCache = {
+    timestamp: now,
+    data: result,
+  };
+
+  return result;
+}
+
+app.get('/api/market/prices', marketLimiter, async (req, res) => {
+  try {
+    const prices = await fetchBackendMarketPrices();
+    res.json({
+      ok: true,
+      prices,
+      timestamp: Date.now(),
+    });
+  } catch (err) {
+    console.error('[/api/market/prices] Error:', err);
+    res.status(500).json({ ok: false, error: 'Failed to fetch live market prices.' });
+  }
+});
+
+app.get('/api/market/scanner', marketLimiter, async (req, res) => {
+  const rawPair = String(req.query.pair || 'XAUUSD').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const pair = rawPair.includes('XAG') || rawPair.includes('SILVER')
+    ? 'XAGUSD'
+    : rawPair.includes('BTC')
+      ? 'BTCUSD'
+      : 'XAUUSD';
+
+  const now = Date.now();
+  const cached = scannerCache[pair];
+  if (cached && cached.data && now - cached.timestamp < SCANNER_TTL_MS) {
+    return res.json({ ok: true, pair, row: cached.data, timestamp: cached.timestamp });
+  }
+
+  const endpoint = pair === 'BTCUSD' ? 'crypto' : 'cfd';
+  const tickers = pair === 'XAUUSD'
+    ? ['OANDA:XAUUSD']
+    : pair === 'XAGUSD'
+      ? ['TVC:SILVER', 'OANDA:XAGUSD']
+      : ['BINANCE:BTCUSDT', 'COINBASE:BTCUSD'];
+
+  const columns = [
+    'close|15', 'open|15', 'high|15', 'low|15', 'change|15', 'change_abs|15',
+    'RSI|15', 'MACD.macd|15', 'MACD.signal|15',
+    'EMA20|15', 'EMA50|15', 'EMA200|15',
+    'close|60', 'EMA20|60',
+    'close|240', 'EMA20|240',
+    'close', 'high', 'low', 'EMA20',
+    'Pivot.M.Classic.R1|15', 'Pivot.M.Classic.R2|15', 'Pivot.M.Classic.R3|15',
+    'Pivot.M.Classic.S1|15', 'Pivot.M.Classic.S2|15', 'Pivot.M.Classic.S3|15',
+    'change', 'change_abs',
+    'close|5', 'high|5', 'low|5',
+  ];
+
+  try {
+    const tvRes = await fetch(`https://scanner.tradingview.com/${endpoint}/scan`, {
+      method: 'POST',
+      headers: TV_HEADERS,
+      body: JSON.stringify({
+        symbols: { tickers },
+        columns,
+      }),
+    });
+
+    if (!tvRes.ok) {
+      throw new Error(`TradingView scanner HTTP ${tvRes.status}`);
+    }
+
+    const json = await tvRes.json();
+    const validEntry = (json?.data || []).find((r) => Array.isArray(r?.d) && typeof r.d[0] === 'number');
+    if (!validEntry) {
+      throw new Error('No valid scanner row returned');
+    }
+
+    scannerCache[pair] = {
+      timestamp: now,
+      data: validEntry.d,
+    };
+
+    res.json({
+      ok: true,
+      pair,
+      row: validEntry.d,
+      timestamp: now,
+    });
+  } catch (err) {
+    console.warn(`[/api/market/scanner] Failed for ${pair}:`, err.message);
+    res.status(502).json({ ok: false, pair, error: err.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`genztrader-news-api listening on port ${PORT}`);
 });
+
