@@ -9,6 +9,7 @@ import { GoogleGenAI, Type } from '@google/genai';
 import { registerPaymentRoutes } from './payment.js';
 import { registerPasswordResetRoutes } from './passwordReset.js';
 import { registerAdminUserRoutes } from './adminUsers.js';
+import { registerOtpRoutes } from './otp.js';
 import { adminDb, firebaseAdminReady, verifyIdToken } from './firebaseAdmin.js';
 import { registerTradingRoutes } from './trading/routes.js';
 import { startAiScanner } from './trading/scanner.js';
@@ -774,6 +775,11 @@ registerPaymentRoutes(app);
 // brute-force the 6-digit code faster than MAX_ATTEMPTS would suggest).
 app.use('/api/auth/password-reset', costlyLimiter);
 registerPasswordResetRoutes(app);
+
+// Signup OTP emails: sends a real email, so same tight limiter (plus the
+// per-account cooldown/hourly cap inside otp.js).
+app.use('/api/auth/otp', costlyLimiter);
+registerOtpRoutes(app);
 
 // Same limiter: hits Firebase Admin to create a real account.
 app.use('/api/admin/create-user', costlyLimiter);
