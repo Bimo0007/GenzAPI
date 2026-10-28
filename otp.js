@@ -33,7 +33,13 @@ function checkRate(uid) {
   }
   recent.push(now);
   sends.set(uid, recent);
-  return { ok: true };
+  return { ok: true, stamp: now };
+}
+
+// A send that EmailJS rejected shouldn't burn the user's cooldown/hourly
+// allowance — only emails that actually went out count.
+function refundRate(uid, stamp) {
+  sends.set(uid, (sends.get(uid) || []).filter((t) => t !== stamp));
 }
 
 async function sendOtpEmail({ email, code, expiresAt, name }) {
@@ -115,7 +121,12 @@ export function registerOtpRoutes(app) {
       const code = String(randomInt(100000, 1000000));
       const expiresAt = Date.now() + OTP_TTL_MS;
       await adminDb.collection('otps').doc(uid).set({ code, email, expiresAt, attempts: 0 });
-      await sendOtpEmail({ email, code, expiresAt, name: profile.name || email.split('@')[0] });
+      try {
+        await sendOtpEmail({ email, code, expiresAt, name: profile.name || email.split('@')[0] });
+      } catch (sendErr) {
+        refundRate(uid, rate.stamp);
+        throw sendErr;
+      }
       res.json({ ok: true });
     } catch (err) {
       console.error('otp/send failed:', err.message || err);
