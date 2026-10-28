@@ -133,4 +133,43 @@ export function registerOtpRoutes(app) {
       res.status(502).json({ error: 'Failed to send verification email.' });
     }
   });
+
+  // Checks the typed code server-side. The otps collection is closed to
+  // clients in firestore.rules, so the code can't be read from the browser,
+  // and only this route (Admin SDK) can flip users/{uid}.emailVerified.
+  app.post('/api/auth/otp/verify', async (req, res) => {
+    if (!firebaseAdminReady) {
+      return res.status(500).json({ error: 'FIREBASE_SERVICE_ACCOUNT_JSON is not configured on the server.' });
+    }
+    const authorization = req.headers.authorization || '';
+    if (!authorization.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Sign in required.' });
+    }
+    let uid;
+    try {
+      uid = await verifyIdToken(authorization.slice(7));
+    } catch {
+      return res.status(401).json({ error: 'Invalid session.' });
+    }
+    const code = String(req.body?.code || '').trim();
+
+    try {
+      const ref = adminDb.collection('otps').doc(uid);
+      const snap = await ref.get();
+      if (!snap.exists) return res.status(400).json({ code: 'invalid_or_expired' });
+      const otp = snap.data();
+      if (Date.now() > otp.expiresAt) return res.status(400).json({ code: 'expired' });
+      if (otp.attempts >= 5) return res.status(400).json({ code: 'too_many_attempts' });
+      if (otp.code !== code) {
+        await ref.update({ attempts: (otp.attempts || 0) + 1 });
+        return res.status(400).json({ code: 'wrong_code' });
+      }
+      await adminDb.collection('users').doc(uid).update({ emailVerified: true });
+      await ref.delete();
+      res.json({ ok: true });
+    } catch (err) {
+      console.error('otp/verify failed:', err.message || err);
+      res.status(500).json({ error: 'Verification failed.' });
+    }
+  });
 }
