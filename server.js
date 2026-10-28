@@ -10,6 +10,8 @@ import { registerPaymentRoutes } from './payment.js';
 import { registerPasswordResetRoutes } from './passwordReset.js';
 import { registerAdminUserRoutes } from './adminUsers.js';
 import { adminDb, firebaseAdminReady, verifyIdToken } from './firebaseAdmin.js';
+import { registerTradingRoutes } from './trading/routes.js';
+import { startAiScanner } from './trading/scanner.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -776,6 +778,7 @@ registerPasswordResetRoutes(app);
 // Same limiter: hits Firebase Admin to create a real account.
 app.use('/api/admin/create-user', costlyLimiter);
 registerAdminUserRoutes(app);
+registerTradingRoutes(app);
 
 function getFallbackCalendarEvents() {
   const now = new Date();
@@ -1570,6 +1573,11 @@ app.post('/api/backtest/xauusd/webhook', pipLimiter, (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`genztrader-news-api listening on port ${PORT}`);
+  startAiScanner();
 });
+
+// A stray rejected promise must never take the always-on signal scanner down with it.
+process.on('unhandledRejection', (reason) => console.error('[server] Unhandled rejection:', reason));
+process.on('uncaughtException', (err) => console.error('[server] Uncaught exception:', err));
 
 

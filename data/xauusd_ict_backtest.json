@@ -1,7 +1,7 @@
 {
   "run_id": "bt-xauusd-aac0511fefa5c296",
   "status": "COMPLETED",
-  "data_category": "HISTORICAL_BACKTEST",
+  "data_category": "HISTORICAL_REAL_DATA",
   "active_version": "ICT-XAUUSD-FVG-MSS-v2.0",
   "strategy_name": "ICT Killzone Liquidity Sweep + MSS + Consequent Encroachment FVG [v2.0 Improved]",
   "strategy_version": "ICT-XAUUSD-FVG-MSS-v2.0",
@@ -16,27 +16,27 @@
   "date_range": {
     "start_utc": "2026-08-07 04:00:00 UTC",
     "end_utc": "2026-10-16 20:55:00 UTC",
-    "training_range": "2026-08-07 \u2192 2026-09-21",
-    "validation_range": "2026-09-21 \u2192 2026-10-05",
-    "out_of_sample_range": "2026-10-05 \u2192 2026-10-16"
+    "training_range": "2026-08-07 → 2026-09-21",
+    "validation_range": "2026-09-21 → 2026-10-05",
+    "out_of_sample_range": "2026-10-05 → 2026-10-16"
   },
   "configuration": {
     "version": "ICT-XAUUSD-FVG-MSS-v2.0",
     "symbol": "XAUUSD",
     "timeframe": "5m",
-    "initial_capital": 10000.0,
+    "initial_capital": 10000,
     "risk_per_trade_pct": 0.005,
-    "rr_target": 2.0,
+    "rr_target": 2,
     "fractal_bars": 3,
     "sweep_lookback_bars": 20,
     "dealing_range_bars": 32,
     "fvg_min_atr_mult": 0.08,
-    "fvg_min_dollars": 1.0,
+    "fvg_min_dollars": 1,
     "fvg_entry_mode": "CE_50",
     "displacement_body_ratio": 0.42,
     "sl_atr_buffer": 0.25,
-    "min_sl_dollars": 6.0,
-    "max_sl_dollars": 24.0,
+    "min_sl_dollars": 6,
+    "max_sl_dollars": 24,
     "limit_expiry_bars": 6,
     "wall_clock_expiry": true,
     "require_discount_premium": true,
@@ -49,25 +49,26 @@
     "spread_dollars": 0.2,
     "commission_dollars": 0.07,
     "slippage_dollars": 0.05,
-    "allow_overlapping_trades": false
+    "allow_overlapping_trades": false,
+    "lot_size": 0.03
   },
   "baseline_configuration": {
     "version": "ICT-XAUUSD-FVG-MSS-v1.2",
     "symbol": "XAUUSD",
     "timeframe": "5m",
-    "initial_capital": 10000.0,
+    "initial_capital": 10000,
     "risk_per_trade_pct": 0.005,
-    "rr_target": 2.0,
+    "rr_target": 2,
     "fractal_bars": 3,
     "sweep_lookback_bars": 20,
     "dealing_range_bars": 32,
     "fvg_min_atr_mult": 0.08,
-    "fvg_min_dollars": 0.0,
+    "fvg_min_dollars": 0,
     "fvg_entry_mode": "CE_50",
     "displacement_body_ratio": 0.42,
     "sl_atr_buffer": 0.25,
-    "min_sl_dollars": 3.0,
-    "max_sl_dollars": 24.0,
+    "min_sl_dollars": 3,
+    "max_sl_dollars": 24,
     "limit_expiry_bars": 6,
     "wall_clock_expiry": false,
     "require_discount_premium": true,
@@ -83,7 +84,7 @@
     "allow_overlapping_trades": false
   },
   "strategy_rules_summary": [
-    "1. Opening Killzone Filter: Trade exclusively during London Open (07:00\u201309:00 UTC) and New York Open (12:30\u201315:00 UTC). Filters out late-session low-expectancy chop.",
+    "1. Opening Killzone Filter: Trade exclusively during London Open (07:00–09:00 UTC) and New York Open (12:30–15:00 UTC). Filters out late-session low-expectancy chop.",
     "2. Post-Swing Liquidity Purge: True wick rejection of confirmed swing points (>= 4 bars old, <= 2 bars spent beyond level) or Asian High/Low, followed by causal reclaim.",
     "3. Market Structure Shift (MSS/CHOCH): Impulsive displacement candle breaking local minor swing structure with candle body >= 42% of total range.",
     "4. Fair Value Gap (FVG) Consequent Encroachment: Limit order placed at the 50% CE midpoint of 3-candle FVG (>= $1.00 min size) inside Discount/Premium. Wall-clock 30-min order expiry.",
@@ -106,7 +107,7 @@
       "start_timestamp": 1786075200,
       "end_timestamp": 1792184100,
       "min_price": 4091.2,
-      "max_price": 4755.0,
+      "max_price": 4755,
       "timezone": "UTC",
       "validation_passed": true
     },
@@ -124,7 +125,7 @@
       "start_timestamp": 1786075200,
       "end_timestamp": 1792183500,
       "min_price": 4091.2,
-      "max_price": 4755.0,
+      "max_price": 4755,
       "timezone": "UTC",
       "validation_passed": true
     },
@@ -142,7 +143,7 @@
       "start_timestamp": 1786075200,
       "end_timestamp": 1792184100,
       "min_price": 4091.2,
-      "max_price": 4755.0,
+      "max_price": 4755,
       "timezone": "UTC",
       "validation_passed": true
     }
@@ -151,7 +152,7 @@
     {
       "config_id": "CFG-1 (Candidate v2.0)",
       "timeframe": "M5",
-      "rr_target": 2.0,
+      "rr_target": 2,
       "htf_filter": true,
       "fvg_entry": "CE_50",
       "train_trades": 13,
@@ -159,25 +160,25 @@
       "train_net_profit": 459.64,
       "train_profit_factor": "3.94",
       "val_trades": 3,
-      "val_win_rate_pct": 100.0,
+      "val_win_rate_pct": 100,
       "val_net_profit": 300.95,
-      "val_profit_factor": "\u221e (No Losing Trades)",
+      "val_profit_factor": "∞ (No Losing Trades)",
       "val_avg_r": 1.9,
-      "val_max_dd_pct": 0.0,
+      "val_max_dd_pct": 0,
       "validation_selection_score": 185.2
     },
     {
       "config_id": "CFG-2 (Baseline v1.2)",
       "timeframe": "M5",
-      "rr_target": 2.0,
+      "rr_target": 2,
       "htf_filter": true,
       "fvg_entry": "CE_50",
       "train_trades": 25,
-      "train_win_rate_pct": 44.0,
+      "train_win_rate_pct": 44,
       "train_net_profit": 344.62,
       "train_profit_factor": "1.48",
       "val_trades": 6,
-      "val_win_rate_pct": 50.0,
+      "val_win_rate_pct": 50,
       "val_net_profit": 138.82,
       "val_profit_factor": "1.89",
       "val_avg_r": 0.45,
@@ -253,34 +254,34 @@
   "walk_forward_4fold": [
     {
       "fold_number": 1,
-      "date_range": "2026-08-07 \u2192 2026-08-25",
+      "date_range": "2026-08-07 → 2026-08-25",
       "closed_trades": 5,
-      "win_rate_pct": 100.0,
-      "decisive_win_rate_pct": 100.0,
+      "win_rate_pct": 100,
+      "decisive_win_rate_pct": 100,
       "net_profit": 364.32,
-      "profit_factor": "\u221e (No Losing Trades)",
+      "profit_factor": "∞ (No Losing Trades)",
       "avg_realized_r": 1.44,
-      "max_drawdown_pct": 0.0,
+      "max_drawdown_pct": 0,
       "status": "PASS (Profitable)"
     },
     {
       "fold_number": 2,
-      "date_range": "2026-08-25 \u2192 2026-09-14",
+      "date_range": "2026-08-25 → 2026-09-14",
       "closed_trades": 6,
       "win_rate_pct": 33.33,
-      "decisive_win_rate_pct": 50.0,
+      "decisive_win_rate_pct": 50,
       "net_profit": 47.87,
       "profit_factor": "1.48",
       "avg_realized_r": 0.16,
-      "max_drawdown_pct": 1.0,
+      "max_drawdown_pct": 1,
       "status": "PASS (Profitable)"
     },
     {
       "fold_number": 3,
-      "date_range": "2026-09-14 \u2192 2026-09-30",
+      "date_range": "2026-09-14 → 2026-09-30",
       "closed_trades": 4,
-      "win_rate_pct": 75.0,
-      "decisive_win_rate_pct": 75.0,
+      "win_rate_pct": 75,
+      "decisive_win_rate_pct": 75,
       "net_profit": 237.48,
       "profit_factor": "5.71",
       "avg_realized_r": 1.18,
@@ -289,9 +290,9 @@
     },
     {
       "fold_number": 4,
-      "date_range": "2026-09-30 \u2192 2026-10-16",
+      "date_range": "2026-09-30 → 2026-10-16",
       "closed_trades": 5,
-      "win_rate_pct": 40.0,
+      "win_rate_pct": 40,
       "decisive_win_rate_pct": 66.67,
       "net_profit": 138.38,
       "profit_factor": "3.74",
@@ -307,8 +308,8 @@
       "winning_trades": 12,
       "losing_trades": 4,
       "breakeven_trades": 4,
-      "win_rate_pct": 60.0,
-      "decisive_win_rate_pct": 75.0,
+      "win_rate_pct": 60,
+      "decisive_win_rate_pct": 75,
       "gross_profit": 996.72,
       "gross_loss": -210.08,
       "raw_gross_profit_before_costs": 1023.24,
@@ -324,12 +325,12 @@
       "expected_value_per_trade": 39.33,
       "expected_value_r": 0.76,
       "max_drawdown_dollars": 103.91,
-      "max_drawdown_pct": 1.0,
+      "max_drawdown_pct": 1,
       "max_consecutive_wins": 6,
       "max_consecutive_losses": 1,
       "avg_trade_duration_minutes": 79,
       "avg_trade_duration_display": "1h 19m",
-      "initial_capital": 10000.0,
+      "initial_capital": 10000,
       "final_equity": 10786.64,
       "long_short_breakdown": {
         "long": {
@@ -337,7 +338,7 @@
           "wins": 6,
           "losses": 3,
           "breakevens": 1,
-          "win_rate_pct": 60.0,
+          "win_rate_pct": 60,
           "net_pnl": 378.2,
           "avg_r": 0.73
         },
@@ -346,7 +347,7 @@
           "wins": 6,
           "losses": 1,
           "breakevens": 3,
-          "win_rate_pct": 60.0,
+          "win_rate_pct": 60,
           "net_pnl": 408.44,
           "avg_r": 0.79
         }
@@ -366,7 +367,7 @@
           "wins": 3,
           "losses": 1,
           "breakevens": 2,
-          "win_rate_pct": 50.0,
+          "win_rate_pct": 50,
           "net_pnl": 239.59,
           "avg_r": 0.77
         }
@@ -387,7 +388,7 @@
           "trades": 8,
           "wins": 4,
           "losses": 4,
-          "win_rate_pct": 50.0,
+          "win_rate_pct": 50,
           "net_pnl": 284.53,
           "return_pct": 2.85,
           "cumulative_r": 5.46
@@ -397,7 +398,7 @@
           "trades": 5,
           "wins": 2,
           "losses": 3,
-          "win_rate_pct": 40.0,
+          "win_rate_pct": 40,
           "net_pnl": 142.62,
           "return_pct": 1.43,
           "cumulative_r": 2.68
@@ -408,10 +409,10 @@
           "trade_num": 0,
           "timestamp": 1786435800,
           "date": "2026-08-11",
-          "equity": 10000.0,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 0.0
+          "equity": 10000,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 0
         },
         {
           "trade_num": 1,
@@ -420,8 +421,8 @@
           "date": "2026-08-11",
           "period_split": "TRAINING",
           "equity": 10090.1,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 90.1,
           "realized_r": 1.802
         },
@@ -432,8 +433,8 @@
           "date": "2026-08-11",
           "period_split": "TRAINING",
           "equity": 10146.35,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 56.25,
           "realized_r": 1.115
         },
@@ -444,8 +445,8 @@
           "date": "2026-08-18",
           "period_split": "TRAINING",
           "equity": 10163.67,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 17.32,
           "realized_r": 0.341
         },
@@ -456,8 +457,8 @@
           "date": "2026-08-18",
           "period_split": "TRAINING",
           "equity": 10258.91,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 95.24,
           "realized_r": 1.874
         },
@@ -468,8 +469,8 @@
           "date": "2026-08-24",
           "period_split": "TRAINING",
           "equity": 10356.55,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 97.64,
           "realized_r": 1.904
         },
@@ -480,8 +481,8 @@
           "date": "2026-08-28",
           "period_split": "TRAINING",
           "equity": 10411.57,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 55.02,
           "realized_r": 1.062
         },
@@ -495,7 +496,7 @@
           "drawdown_dollars": 52.08,
           "drawdown_pct": 0.5,
           "net_pnl": -52.08,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 8,
@@ -506,8 +507,8 @@
           "equity": 10359.49,
           "drawdown_dollars": 52.08,
           "drawdown_pct": 0.5,
-          "net_pnl": 0.0,
-          "realized_r": 0.0
+          "net_pnl": 0,
+          "realized_r": 0
         },
         {
           "trade_num": 9,
@@ -518,8 +519,8 @@
           "equity": 10359.49,
           "drawdown_dollars": 52.08,
           "drawdown_pct": 0.5,
-          "net_pnl": 0.0,
-          "realized_r": 0.0
+          "net_pnl": 0,
+          "realized_r": 0
         },
         {
           "trade_num": 10,
@@ -529,7 +530,7 @@
           "period_split": "TRAINING",
           "equity": 10307.66,
           "drawdown_dollars": 103.91,
-          "drawdown_pct": 1.0,
+          "drawdown_pct": 1,
           "net_pnl": -51.83,
           "realized_r": -1.001
         },
@@ -552,8 +553,8 @@
           "date": "2026-09-16",
           "period_split": "TRAINING",
           "equity": 10498.46,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 95.9,
           "realized_r": 1.844
         },
@@ -567,7 +568,7 @@
           "drawdown_dollars": 52.48,
           "drawdown_pct": 0.5,
           "net_pnl": -52.48,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 14,
@@ -576,8 +577,8 @@
           "date": "2026-09-22",
           "period_split": "VALIDATION",
           "equity": 10543.72,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 97.74,
           "realized_r": 1.871
         },
@@ -588,8 +589,8 @@
           "date": "2026-09-23",
           "period_split": "VALIDATION",
           "equity": 10644.02,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 100.3,
           "realized_r": 1.902
         },
@@ -600,8 +601,8 @@
           "date": "2026-10-02",
           "period_split": "VALIDATION",
           "equity": 10740.49,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 96.47,
           "realized_r": 1.813
         },
@@ -612,10 +613,10 @@
           "date": "2026-10-12",
           "period_split": "OUT_OF_SAMPLE",
           "equity": 10740.49,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 0.0,
-          "realized_r": 0.0
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 0,
+          "realized_r": 0
         },
         {
           "trade_num": 18,
@@ -624,10 +625,10 @@
           "date": "2026-10-13",
           "period_split": "OUT_OF_SAMPLE",
           "equity": 10740.49,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 0.0,
-          "realized_r": 0.0
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 0,
+          "realized_r": 0
         },
         {
           "trade_num": 19,
@@ -639,7 +640,7 @@
           "drawdown_dollars": 53.69,
           "drawdown_pct": 0.5,
           "net_pnl": -53.69,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 20,
@@ -648,8 +649,8 @@
           "date": "2026-10-15",
           "period_split": "OUT_OF_SAMPLE",
           "equity": 10786.64,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 99.84,
           "realized_r": 1.869
         }
@@ -662,37 +663,37 @@
       "winning_trades": 12,
       "losing_trades": 4,
       "breakeven_trades": 4,
-      "win_rate_pct": 60.0,
-      "decisive_win_rate_pct": 75.0,
-      "gross_profit": 1019.12,
-      "gross_loss": -210.34,
+      "win_rate_pct": 60,
+      "decisive_win_rate_pct": 75,
+      "gross_profit": 596.97,
+      "gross_loss": -101.43,
       "raw_gross_profit_before_costs": 1038.5,
       "raw_gross_loss_before_costs": -202.42,
-      "total_trading_costs": 35.78,
-      "net_profit": 808.78,
+      "total_trading_costs": 14.16,
+      "net_profit": 484.38,
       "net_return_pct": 8.09,
-      "profit_factor": 4.85,
-      "profit_factor_display": "4.85",
-      "avg_winning_trade": 84.93,
-      "avg_losing_trade": -52.59,
+      "profit_factor": 5.16,
+      "profit_factor_display": "5.16",
+      "avg_winning_trade": 49.75,
+      "avg_losing_trade": -25.36,
       "avg_realized_r": 0.78,
-      "expected_value_per_trade": 40.44,
+      "expected_value_per_trade": 24.22,
       "expected_value_r": 0.78,
-      "max_drawdown_dollars": 104.01,
-      "max_drawdown_pct": 1.0,
+      "max_drawdown_dollars": 53.31,
+      "max_drawdown_pct": 0.53,
       "max_consecutive_wins": 6,
       "max_consecutive_losses": 1,
       "avg_trade_duration_minutes": 79,
       "avg_trade_duration_display": "1h 19m",
-      "initial_capital": 10000.0,
-      "final_equity": 10808.78,
+      "initial_capital": 10000,
+      "final_equity": 10484.38,
       "long_short_breakdown": {
         "long": {
           "trades": 10,
           "wins": 6,
           "losses": 3,
           "breakevens": 1,
-          "win_rate_pct": 60.0,
+          "win_rate_pct": 60,
           "net_pnl": 390.4,
           "avg_r": 0.76
         },
@@ -701,7 +702,7 @@
           "wins": 6,
           "losses": 1,
           "breakevens": 3,
-          "win_rate_pct": 60.0,
+          "win_rate_pct": 60,
           "net_pnl": 418.38,
           "avg_r": 0.81
         }
@@ -721,7 +722,7 @@
           "wins": 3,
           "losses": 1,
           "breakevens": 2,
-          "win_rate_pct": 50.0,
+          "win_rate_pct": 50,
           "net_pnl": 244.88,
           "avg_r": 0.79
         }
@@ -742,7 +743,7 @@
           "trades": 8,
           "wins": 4,
           "losses": 4,
-          "win_rate_pct": 50.0,
+          "win_rate_pct": 50,
           "net_pnl": 292.66,
           "return_pct": 2.93,
           "cumulative_r": 5.61
@@ -752,7 +753,7 @@
           "trades": 5,
           "wins": 2,
           "losses": 3,
-          "win_rate_pct": 40.0,
+          "win_rate_pct": 40,
           "net_pnl": 147.53,
           "return_pct": 1.48,
           "cumulative_r": 2.77
@@ -763,10 +764,10 @@
           "trade_num": 0,
           "timestamp": 1786435800,
           "date": "2026-08-11",
-          "equity": 10000.0,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 0.0
+          "equity": 10000,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 0
         },
         {
           "trade_num": 1,
@@ -774,11 +775,11 @@
           "timestamp": 1786437300,
           "date": "2026-08-11",
           "period_split": "TRAINING",
-          "equity": 10092.77,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 92.77,
-          "realized_r": 1.855
+          "equity": 10036.19,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 36.19,
+          "realized_r": 1.962
         },
         {
           "trade_num": 2,
@@ -786,11 +787,11 @@
           "timestamp": 1786449300,
           "date": "2026-08-11",
           "period_split": "TRAINING",
-          "equity": 10149.97,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 57.2,
-          "realized_r": 1.134
+          "equity": 10086.96,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 50.77,
+          "realized_r": 1.165
         },
         {
           "trade_num": 3,
@@ -798,11 +799,11 @@
           "timestamp": 1787052900,
           "date": "2026-08-18",
           "period_split": "TRAINING",
-          "equity": 10168.18,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 18.21,
-          "realized_r": 0.359
+          "equity": 10097.98,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 11.02,
+          "realized_r": 0.38
         },
         {
           "trade_num": 4,
@@ -810,11 +811,11 @@
           "timestamp": 1787064000,
           "date": "2026-08-18",
           "period_split": "TRAINING",
-          "equity": 10265.24,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 97.06,
-          "realized_r": 1.909
+          "equity": 10156.49,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 58.51,
+          "realized_r": 1.978
         },
         {
           "trade_num": 5,
@@ -822,11 +823,11 @@
           "timestamp": 1787571300,
           "date": "2026-08-24",
           "period_split": "TRAINING",
-          "equity": 10364.32,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 99.08,
-          "realized_r": 1.93
+          "equity": 10233.9,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 77.41,
+          "realized_r": 1.983
         },
         {
           "trade_num": 6,
@@ -834,11 +835,11 @@
           "timestamp": 1787917800,
           "date": "2026-08-28",
           "period_split": "TRAINING",
-          "equity": 10420.72,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 56.4,
-          "realized_r": 1.088
+          "equity": 10268.02,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 34.12,
+          "realized_r": 1.133
         },
         {
           "trade_num": 7,
@@ -846,11 +847,11 @@
           "timestamp": 1788170700,
           "date": "2026-08-31",
           "period_split": "TRAINING",
-          "equity": 10368.59,
-          "drawdown_dollars": 52.13,
-          "drawdown_pct": 0.5,
-          "net_pnl": -52.13,
-          "realized_r": -1.0
+          "equity": 10238.2,
+          "drawdown_dollars": 29.82,
+          "drawdown_pct": 0.29,
+          "net_pnl": -29.82,
+          "realized_r": -1
         },
         {
           "trade_num": 8,
@@ -858,11 +859,11 @@
           "timestamp": 1788338400,
           "date": "2026-09-02",
           "period_split": "TRAINING",
-          "equity": 10368.59,
-          "drawdown_dollars": 52.13,
-          "drawdown_pct": 0.5,
-          "net_pnl": 0.0,
-          "realized_r": 0.0
+          "equity": 10238.2,
+          "drawdown_dollars": 29.82,
+          "drawdown_pct": 0.29,
+          "net_pnl": 0,
+          "realized_r": 0
         },
         {
           "trade_num": 9,
@@ -870,11 +871,11 @@
           "timestamp": 1788875400,
           "date": "2026-09-08",
           "period_split": "TRAINING",
-          "equity": 10368.59,
-          "drawdown_dollars": 52.13,
-          "drawdown_pct": 0.5,
-          "net_pnl": 0.0,
-          "realized_r": 0.0
+          "equity": 10238.2,
+          "drawdown_dollars": 29.82,
+          "drawdown_pct": 0.29,
+          "net_pnl": 0,
+          "realized_r": 0
         },
         {
           "trade_num": 10,
@@ -882,11 +883,11 @@
           "timestamp": 1789029000,
           "date": "2026-09-10",
           "period_split": "TRAINING",
-          "equity": 10316.71,
-          "drawdown_dollars": 104.01,
-          "drawdown_pct": 1.0,
-          "net_pnl": -51.88,
-          "realized_r": -1.001
+          "equity": 10214.71,
+          "drawdown_dollars": 53.31,
+          "drawdown_pct": 0.52,
+          "net_pnl": -23.49,
+          "realized_r": -1
         },
         {
           "trade_num": 11,
@@ -894,11 +895,11 @@
           "timestamp": 1789125000,
           "date": "2026-09-11",
           "period_split": "TRAINING",
-          "equity": 10413.94,
-          "drawdown_dollars": 6.78,
+          "equity": 10260.62,
+          "drawdown_dollars": 7.4,
           "drawdown_pct": 0.07,
-          "net_pnl": 97.23,
-          "realized_r": 1.885
+          "net_pnl": 45.91,
+          "realized_r": 1.97
         },
         {
           "trade_num": 12,
@@ -906,11 +907,11 @@
           "timestamp": 1789553100,
           "date": "2026-09-16",
           "period_split": "TRAINING",
-          "equity": 10512.18,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 98.24,
-          "realized_r": 1.887
+          "equity": 10307.16,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 46.54,
+          "realized_r": 1.971
         },
         {
           "trade_num": 13,
@@ -918,11 +919,11 @@
           "timestamp": 1789724100,
           "date": "2026-09-18",
           "period_split": "TRAINING",
-          "equity": 10459.64,
-          "drawdown_dollars": 52.54,
-          "drawdown_pct": 0.5,
-          "net_pnl": -52.54,
-          "realized_r": -1.0
+          "equity": 10287.12,
+          "drawdown_dollars": 20.04,
+          "drawdown_pct": 0.19,
+          "net_pnl": -20.04,
+          "realized_r": -1
         },
         {
           "trade_num": 14,
@@ -930,11 +931,11 @@
           "timestamp": 1790088000,
           "date": "2026-09-22",
           "period_split": "VALIDATION",
-          "equity": 10559.37,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 99.73,
-          "realized_r": 1.907
+          "equity": 10344.25,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 57.13,
+          "realized_r": 1.978
         },
         {
           "trade_num": 15,
@@ -942,11 +943,11 @@
           "timestamp": 1790171100,
           "date": "2026-09-23",
           "period_split": "VALIDATION",
-          "equity": 10661.25,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 101.88,
-          "realized_r": 1.93
+          "equity": 10421.15,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 76.9,
+          "realized_r": 1.982
         },
         {
           "trade_num": 16,
@@ -954,11 +955,11 @@
           "timestamp": 1790928300,
           "date": "2026-10-02",
           "period_split": "VALIDATION",
-          "equity": 10760.59,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 99.34,
-          "realized_r": 1.864
+          "equity": 10459.5,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 38.35,
+          "realized_r": 1.964
         },
         {
           "trade_num": 17,
@@ -966,11 +967,11 @@
           "timestamp": 1791824700,
           "date": "2026-10-12",
           "period_split": "OUT_OF_SAMPLE",
-          "equity": 10760.59,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 0.0,
-          "realized_r": 0.0
+          "equity": 10459.5,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 0,
+          "realized_r": 0
         },
         {
           "trade_num": 18,
@@ -978,11 +979,11 @@
           "timestamp": 1791880500,
           "date": "2026-10-13",
           "period_split": "OUT_OF_SAMPLE",
-          "equity": 10760.59,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 0.0,
-          "realized_r": 0.0
+          "equity": 10459.5,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 0,
+          "realized_r": 0
         },
         {
           "trade_num": 19,
@@ -990,11 +991,11 @@
           "timestamp": 1791899700,
           "date": "2026-10-13",
           "period_split": "OUT_OF_SAMPLE",
-          "equity": 10706.8,
-          "drawdown_dollars": 53.79,
-          "drawdown_pct": 0.5,
-          "net_pnl": -53.79,
-          "realized_r": -1.0
+          "equity": 10428.42,
+          "drawdown_dollars": 31.08,
+          "drawdown_pct": 0.3,
+          "net_pnl": -31.08,
+          "realized_r": -1
         },
         {
           "trade_num": 20,
@@ -1002,13 +1003,15 @@
           "timestamp": 1792052700,
           "date": "2026-10-15",
           "period_split": "OUT_OF_SAMPLE",
-          "equity": 10808.78,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 101.98,
-          "realized_r": 1.905
+          "equity": 10484.38,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 55.96,
+          "realized_r": 1.976
         }
-      ]
+      ],
+      "win_rate_display": "60.0%",
+      "gross_profit_factor": 5.89
     },
     "training": {
       "total_closed_trades": 13,
@@ -1032,12 +1035,12 @@
       "expected_value_per_trade": 35.36,
       "expected_value_r": 0.7,
       "max_drawdown_dollars": 104.01,
-      "max_drawdown_pct": 1.0,
+      "max_drawdown_pct": 1,
       "max_consecutive_wins": 6,
       "max_consecutive_losses": 1,
       "avg_trade_duration_minutes": 91,
       "avg_trade_duration_display": "1h 31m",
-      "initial_capital": 10000.0,
+      "initial_capital": 10000,
       "final_equity": 10459.64,
       "long_short_breakdown": {
         "long": {
@@ -1074,7 +1077,7 @@
           "wins": 1,
           "losses": 0,
           "breakevens": 1,
-          "win_rate_pct": 50.0,
+          "win_rate_pct": 50,
           "net_pnl": 97.06,
           "avg_r": 0.95
         }
@@ -1106,10 +1109,10 @@
           "trade_num": 0,
           "timestamp": 1786435800,
           "date": "2026-08-11",
-          "equity": 10000.0,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 0.0
+          "equity": 10000,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 0
         },
         {
           "trade_num": 1,
@@ -1118,8 +1121,8 @@
           "date": "2026-08-11",
           "period_split": "TRAINING",
           "equity": 10092.77,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 92.77,
           "realized_r": 1.855
         },
@@ -1130,8 +1133,8 @@
           "date": "2026-08-11",
           "period_split": "TRAINING",
           "equity": 10149.97,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 57.2,
           "realized_r": 1.134
         },
@@ -1142,8 +1145,8 @@
           "date": "2026-08-18",
           "period_split": "TRAINING",
           "equity": 10168.18,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 18.21,
           "realized_r": 0.359
         },
@@ -1154,8 +1157,8 @@
           "date": "2026-08-18",
           "period_split": "TRAINING",
           "equity": 10265.24,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 97.06,
           "realized_r": 1.909
         },
@@ -1166,8 +1169,8 @@
           "date": "2026-08-24",
           "period_split": "TRAINING",
           "equity": 10364.32,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 99.08,
           "realized_r": 1.93
         },
@@ -1178,8 +1181,8 @@
           "date": "2026-08-28",
           "period_split": "TRAINING",
           "equity": 10420.72,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 56.4,
           "realized_r": 1.088
         },
@@ -1193,7 +1196,7 @@
           "drawdown_dollars": 52.13,
           "drawdown_pct": 0.5,
           "net_pnl": -52.13,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 8,
@@ -1204,8 +1207,8 @@
           "equity": 10368.59,
           "drawdown_dollars": 52.13,
           "drawdown_pct": 0.5,
-          "net_pnl": 0.0,
-          "realized_r": 0.0
+          "net_pnl": 0,
+          "realized_r": 0
         },
         {
           "trade_num": 9,
@@ -1216,8 +1219,8 @@
           "equity": 10368.59,
           "drawdown_dollars": 52.13,
           "drawdown_pct": 0.5,
-          "net_pnl": 0.0,
-          "realized_r": 0.0
+          "net_pnl": 0,
+          "realized_r": 0
         },
         {
           "trade_num": 10,
@@ -1227,7 +1230,7 @@
           "period_split": "TRAINING",
           "equity": 10316.71,
           "drawdown_dollars": 104.01,
-          "drawdown_pct": 1.0,
+          "drawdown_pct": 1,
           "net_pnl": -51.88,
           "realized_r": -1.001
         },
@@ -1250,8 +1253,8 @@
           "date": "2026-09-16",
           "period_split": "TRAINING",
           "equity": 10512.18,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 98.24,
           "realized_r": 1.887
         },
@@ -1265,7 +1268,7 @@
           "drawdown_dollars": 52.54,
           "drawdown_pct": 0.5,
           "net_pnl": -52.54,
-          "realized_r": -1.0
+          "realized_r": -1
         }
       ]
     },
@@ -1274,8 +1277,8 @@
       "winning_trades": 3,
       "losing_trades": 0,
       "breakeven_trades": 0,
-      "win_rate_pct": 100.0,
-      "decisive_win_rate_pct": 100.0,
+      "win_rate_pct": 100,
+      "decisive_win_rate_pct": 100,
       "gross_profit": 300.95,
       "gross_loss": 0,
       "raw_gross_profit_before_costs": 305.9,
@@ -1284,19 +1287,19 @@
       "net_profit": 300.95,
       "net_return_pct": 3.01,
       "profit_factor": 99.99,
-      "profit_factor_display": "\u221e (No Losing Trades)",
+      "profit_factor_display": "∞ (No Losing Trades)",
       "avg_winning_trade": 100.32,
-      "avg_losing_trade": 0.0,
+      "avg_losing_trade": 0,
       "avg_realized_r": 1.9,
       "expected_value_per_trade": 100.32,
       "expected_value_r": 1.9,
-      "max_drawdown_dollars": 0.0,
-      "max_drawdown_pct": 0.0,
+      "max_drawdown_dollars": 0,
+      "max_drawdown_pct": 0,
       "max_consecutive_wins": 3,
       "max_consecutive_losses": 0,
       "avg_trade_duration_minutes": 50,
       "avg_trade_duration_display": "50m",
-      "initial_capital": 10000.0,
+      "initial_capital": 10000,
       "final_equity": 10300.95,
       "long_short_breakdown": {
         "long": {
@@ -1304,7 +1307,7 @@
           "wins": 1,
           "losses": 0,
           "breakevens": 0,
-          "win_rate_pct": 100.0,
+          "win_rate_pct": 100,
           "net_pnl": 99.34,
           "avg_r": 1.86
         },
@@ -1313,7 +1316,7 @@
           "wins": 2,
           "losses": 0,
           "breakevens": 0,
-          "win_rate_pct": 100.0,
+          "win_rate_pct": 100,
           "net_pnl": 201.61,
           "avg_r": 1.92
         }
@@ -1324,7 +1327,7 @@
           "wins": 1,
           "losses": 0,
           "breakevens": 0,
-          "win_rate_pct": 100.0,
+          "win_rate_pct": 100,
           "net_pnl": 99.34,
           "avg_r": 1.86
         },
@@ -1333,7 +1336,7 @@
           "wins": 2,
           "losses": 0,
           "breakevens": 0,
-          "win_rate_pct": 100.0,
+          "win_rate_pct": 100,
           "net_pnl": 201.61,
           "avg_r": 1.92
         }
@@ -1344,7 +1347,7 @@
           "trades": 2,
           "wins": 2,
           "losses": 0,
-          "win_rate_pct": 100.0,
+          "win_rate_pct": 100,
           "net_pnl": 201.61,
           "return_pct": 2.02,
           "cumulative_r": 3.84
@@ -1354,7 +1357,7 @@
           "trades": 1,
           "wins": 1,
           "losses": 0,
-          "win_rate_pct": 100.0,
+          "win_rate_pct": 100,
           "net_pnl": 99.34,
           "return_pct": 0.99,
           "cumulative_r": 1.86
@@ -1365,10 +1368,10 @@
           "trade_num": 0,
           "timestamp": 1790083500,
           "date": "2026-09-22",
-          "equity": 10000.0,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 0.0
+          "equity": 10000,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 0
         },
         {
           "trade_num": 1,
@@ -1377,8 +1380,8 @@
           "date": "2026-09-22",
           "period_split": "VALIDATION",
           "equity": 10099.73,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 99.73,
           "realized_r": 1.907
         },
@@ -1389,8 +1392,8 @@
           "date": "2026-09-23",
           "period_split": "VALIDATION",
           "equity": 10201.61,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 101.88,
           "realized_r": 1.93
         },
@@ -1401,8 +1404,8 @@
           "date": "2026-10-02",
           "period_split": "VALIDATION",
           "equity": 10300.95,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 99.34,
           "realized_r": 1.864
         }
@@ -1413,8 +1416,8 @@
       "winning_trades": 1,
       "losing_trades": 1,
       "breakeven_trades": 2,
-      "win_rate_pct": 25.0,
-      "decisive_win_rate_pct": 50.0,
+      "win_rate_pct": 25,
+      "decisive_win_rate_pct": 50,
       "gross_profit": 101.98,
       "gross_loss": -53.79,
       "raw_gross_profit_before_costs": 103.57,
@@ -1435,7 +1438,7 @@
       "max_consecutive_losses": 1,
       "avg_trade_duration_minutes": 62,
       "avg_trade_duration_display": "1h 2m",
-      "initial_capital": 10000.0,
+      "initial_capital": 10000,
       "final_equity": 10048.19,
       "long_short_breakdown": {
         "long": {
@@ -1452,9 +1455,9 @@
           "wins": 0,
           "losses": 0,
           "breakevens": 1,
-          "win_rate_pct": 0.0,
-          "net_pnl": 0.0,
-          "avg_r": 0.0
+          "win_rate_pct": 0,
+          "net_pnl": 0,
+          "avg_r": 0
         }
       },
       "session_breakdown": {
@@ -1463,7 +1466,7 @@
           "wins": 1,
           "losses": 0,
           "breakevens": 1,
-          "win_rate_pct": 50.0,
+          "win_rate_pct": 50,
           "net_pnl": 101.98,
           "avg_r": 0.95
         },
@@ -1472,7 +1475,7 @@
           "wins": 0,
           "losses": 1,
           "breakevens": 1,
-          "win_rate_pct": 0.0,
+          "win_rate_pct": 0,
           "net_pnl": -53.79,
           "avg_r": -0.5
         }
@@ -1483,7 +1486,7 @@
           "trades": 4,
           "wins": 1,
           "losses": 3,
-          "win_rate_pct": 25.0,
+          "win_rate_pct": 25,
           "net_pnl": 48.19,
           "return_pct": 0.48,
           "cumulative_r": 0.91
@@ -1494,10 +1497,10 @@
           "trade_num": 0,
           "timestamp": 1791815100,
           "date": "2026-10-12",
-          "equity": 10000.0,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 0.0
+          "equity": 10000,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 0
         },
         {
           "trade_num": 1,
@@ -1505,11 +1508,11 @@
           "timestamp": 1791824700,
           "date": "2026-10-12",
           "period_split": "OUT_OF_SAMPLE",
-          "equity": 10000.0,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 0.0,
-          "realized_r": 0.0
+          "equity": 10000,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 0,
+          "realized_r": 0
         },
         {
           "trade_num": 2,
@@ -1517,11 +1520,11 @@
           "timestamp": 1791880500,
           "date": "2026-10-13",
           "period_split": "OUT_OF_SAMPLE",
-          "equity": 10000.0,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 0.0,
-          "realized_r": 0.0
+          "equity": 10000,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 0,
+          "realized_r": 0
         },
         {
           "trade_num": 3,
@@ -1533,7 +1536,7 @@
           "drawdown_dollars": 53.79,
           "drawdown_pct": 0.54,
           "net_pnl": -53.79,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 4,
@@ -1542,8 +1545,8 @@
           "date": "2026-10-15",
           "period_split": "OUT_OF_SAMPLE",
           "equity": 10048.19,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 101.98,
           "realized_r": 1.905
         }
@@ -1578,7 +1581,7 @@
       "max_consecutive_losses": 8,
       "avg_trade_duration_minutes": 104,
       "avg_trade_duration_display": "1h 44m",
-      "initial_capital": 10000.0,
+      "initial_capital": 10000,
       "final_equity": 10167.4,
       "long_short_breakdown": {
         "long": {
@@ -1657,10 +1660,10 @@
           "trade_num": 0,
           "timestamp": 1786435800,
           "date": "2026-08-11",
-          "equity": 10000.0,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 0.0
+          "equity": 10000,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 0
         },
         {
           "trade_num": 1,
@@ -1669,8 +1672,8 @@
           "date": "2026-08-11",
           "period_split": "TRAINING",
           "equity": 10092.77,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 92.77,
           "realized_r": 1.855
         },
@@ -1681,8 +1684,8 @@
           "date": "2026-08-11",
           "period_split": "TRAINING",
           "equity": 10190.52,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 97.75,
           "realized_r": 1.937
         },
@@ -1696,7 +1699,7 @@
           "drawdown_dollars": 50.96,
           "drawdown_pct": 0.5,
           "net_pnl": -50.96,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 4,
@@ -1706,9 +1709,9 @@
           "period_split": "TRAINING",
           "equity": 10088.87,
           "drawdown_dollars": 101.65,
-          "drawdown_pct": 1.0,
+          "drawdown_pct": 1,
           "net_pnl": -50.69,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 5,
@@ -1729,8 +1732,8 @@
           "date": "2026-08-18",
           "period_split": "TRAINING",
           "equity": 10282.27,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 97.22,
           "realized_r": 1.909
         },
@@ -1744,7 +1747,7 @@
           "drawdown_dollars": 51.44,
           "drawdown_pct": 0.5,
           "net_pnl": -51.44,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 8,
@@ -1754,9 +1757,9 @@
           "period_split": "TRAINING",
           "equity": 10179.65,
           "drawdown_dollars": 102.62,
-          "drawdown_pct": 1.0,
+          "drawdown_pct": 1,
           "net_pnl": -51.18,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 9,
@@ -1777,8 +1780,8 @@
           "date": "2026-08-25",
           "period_split": "TRAINING",
           "equity": 10376.27,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 98.36,
           "realized_r": 1.914
         },
@@ -1792,7 +1795,7 @@
           "drawdown_dollars": 51.88,
           "drawdown_pct": 0.5,
           "net_pnl": -51.88,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 12,
@@ -1802,9 +1805,9 @@
           "period_split": "TRAINING",
           "equity": 10272.79,
           "drawdown_dollars": 103.48,
-          "drawdown_pct": 1.0,
+          "drawdown_pct": 1,
           "net_pnl": -51.6,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 13,
@@ -1816,7 +1819,7 @@
           "drawdown_dollars": 154.87,
           "drawdown_pct": 1.49,
           "net_pnl": -51.39,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 14,
@@ -1837,8 +1840,8 @@
           "date": "2026-09-04",
           "period_split": "TRAINING",
           "equity": 10415.41,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 98.49,
           "realized_r": 1.909
         },
@@ -1852,7 +1855,7 @@
           "drawdown_dollars": 52.09,
           "drawdown_pct": 0.5,
           "net_pnl": -52.09,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 17,
@@ -1862,9 +1865,9 @@
           "period_split": "TRAINING",
           "equity": 10311.5,
           "drawdown_dollars": 103.91,
-          "drawdown_pct": 1.0,
+          "drawdown_pct": 1,
           "net_pnl": -51.82,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 18,
@@ -1897,8 +1900,8 @@
           "date": "2026-09-11",
           "period_split": "TRAINING",
           "equity": 10455.5,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 97.62,
           "realized_r": 1.885
         },
@@ -1912,7 +1915,7 @@
           "drawdown_dollars": 52.3,
           "drawdown_pct": 0.5,
           "net_pnl": -52.3,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 22,
@@ -1921,8 +1924,8 @@
           "date": "2026-09-16",
           "period_split": "TRAINING",
           "equity": 10501.34,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 98.14,
           "realized_r": 1.887
         },
@@ -1936,7 +1939,7 @@
           "drawdown_dollars": 52.5,
           "drawdown_pct": 0.5,
           "net_pnl": -52.5,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 24,
@@ -1946,9 +1949,9 @@
           "period_split": "TRAINING",
           "equity": 10396.59,
           "drawdown_dollars": 104.75,
-          "drawdown_pct": 1.0,
+          "drawdown_pct": 1,
           "net_pnl": -52.25,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 25,
@@ -1960,7 +1963,7 @@
           "drawdown_dollars": 156.72,
           "drawdown_pct": 1.49,
           "net_pnl": -51.97,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 26,
@@ -1972,7 +1975,7 @@
           "drawdown_dollars": 208.42,
           "drawdown_pct": 1.98,
           "net_pnl": -51.7,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 27,
@@ -2008,7 +2011,7 @@
           "drawdown_dollars": 62.47,
           "drawdown_pct": 0.59,
           "net_pnl": -52.44,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 30,
@@ -2017,8 +2020,8 @@
           "date": "2026-10-02",
           "period_split": "VALIDATION",
           "equity": 10536.14,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 97.27,
           "realized_r": 1.864
         },
@@ -2032,7 +2035,7 @@
           "drawdown_dollars": 52.7,
           "drawdown_pct": 0.5,
           "net_pnl": -52.7,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 32,
@@ -2042,9 +2045,9 @@
           "period_split": "OUT_OF_SAMPLE",
           "equity": 10431.05,
           "drawdown_dollars": 105.09,
-          "drawdown_pct": 1.0,
+          "drawdown_pct": 1,
           "net_pnl": -52.39,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 33,
@@ -2056,7 +2059,7 @@
           "drawdown_dollars": 157.26,
           "drawdown_pct": 1.49,
           "net_pnl": -52.17,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 34,
@@ -2064,11 +2067,11 @@
           "timestamp": 1791535800,
           "date": "2026-10-09",
           "period_split": "OUT_OF_SAMPLE",
-          "equity": 10327.0,
+          "equity": 10327,
           "drawdown_dollars": 209.14,
           "drawdown_pct": 1.98,
           "net_pnl": -51.88,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 35,
@@ -2092,7 +2095,7 @@
           "drawdown_dollars": 312.12,
           "drawdown_pct": 2.96,
           "net_pnl": -51.38,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 37,
@@ -2104,7 +2107,7 @@
           "drawdown_dollars": 363.25,
           "drawdown_pct": 3.45,
           "net_pnl": -51.13,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 38,
@@ -2116,7 +2119,7 @@
           "drawdown_dollars": 414.1,
           "drawdown_pct": 3.93,
           "net_pnl": -50.85,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 39,
@@ -2149,12 +2152,12 @@
       "winning_trades": 11,
       "losing_trades": 14,
       "breakeven_trades": 0,
-      "win_rate_pct": 44.0,
-      "decisive_win_rate_pct": 44.0,
+      "win_rate_pct": 44,
+      "decisive_win_rate_pct": 44,
       "gross_profit": 1068.77,
       "gross_loss": -724.15,
       "raw_gross_profit_before_costs": 1086.1,
-      "raw_gross_loss_before_costs": -697.0,
+      "raw_gross_loss_before_costs": -697,
       "total_trading_costs": 44.46,
       "net_profit": 344.62,
       "net_return_pct": 3.45,
@@ -2171,7 +2174,7 @@
       "max_consecutive_losses": 3,
       "avg_trade_duration_minutes": 109,
       "avg_trade_duration_display": "1h 49m",
-      "initial_capital": 10000.0,
+      "initial_capital": 10000,
       "final_equity": 10344.62,
       "long_short_breakdown": {
         "long": {
@@ -2188,7 +2191,7 @@
           "wins": 7,
           "losses": 7,
           "breakevens": 0,
-          "win_rate_pct": 50.0,
+          "win_rate_pct": 50,
           "net_pnl": 320.94,
           "avg_r": 0.45
         }
@@ -2240,10 +2243,10 @@
           "trade_num": 0,
           "timestamp": 1786435800,
           "date": "2026-08-11",
-          "equity": 10000.0,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 0.0
+          "equity": 10000,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 0
         },
         {
           "trade_num": 1,
@@ -2252,8 +2255,8 @@
           "date": "2026-08-11",
           "period_split": "TRAINING",
           "equity": 10092.77,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 92.77,
           "realized_r": 1.855
         },
@@ -2264,8 +2267,8 @@
           "date": "2026-08-11",
           "period_split": "TRAINING",
           "equity": 10190.52,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 97.75,
           "realized_r": 1.937
         },
@@ -2279,7 +2282,7 @@
           "drawdown_dollars": 50.96,
           "drawdown_pct": 0.5,
           "net_pnl": -50.96,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 4,
@@ -2289,9 +2292,9 @@
           "period_split": "TRAINING",
           "equity": 10088.87,
           "drawdown_dollars": 101.65,
-          "drawdown_pct": 1.0,
+          "drawdown_pct": 1,
           "net_pnl": -50.69,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 5,
@@ -2312,8 +2315,8 @@
           "date": "2026-08-18",
           "period_split": "TRAINING",
           "equity": 10282.27,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 97.22,
           "realized_r": 1.909
         },
@@ -2327,7 +2330,7 @@
           "drawdown_dollars": 51.44,
           "drawdown_pct": 0.5,
           "net_pnl": -51.44,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 8,
@@ -2337,9 +2340,9 @@
           "period_split": "TRAINING",
           "equity": 10179.65,
           "drawdown_dollars": 102.62,
-          "drawdown_pct": 1.0,
+          "drawdown_pct": 1,
           "net_pnl": -51.18,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 9,
@@ -2360,8 +2363,8 @@
           "date": "2026-08-25",
           "period_split": "TRAINING",
           "equity": 10376.27,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 98.36,
           "realized_r": 1.914
         },
@@ -2375,7 +2378,7 @@
           "drawdown_dollars": 51.88,
           "drawdown_pct": 0.5,
           "net_pnl": -51.88,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 12,
@@ -2385,9 +2388,9 @@
           "period_split": "TRAINING",
           "equity": 10272.79,
           "drawdown_dollars": 103.48,
-          "drawdown_pct": 1.0,
+          "drawdown_pct": 1,
           "net_pnl": -51.6,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 13,
@@ -2399,7 +2402,7 @@
           "drawdown_dollars": 154.87,
           "drawdown_pct": 1.49,
           "net_pnl": -51.39,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 14,
@@ -2420,8 +2423,8 @@
           "date": "2026-09-04",
           "period_split": "TRAINING",
           "equity": 10415.41,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 98.49,
           "realized_r": 1.909
         },
@@ -2435,7 +2438,7 @@
           "drawdown_dollars": 52.09,
           "drawdown_pct": 0.5,
           "net_pnl": -52.09,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 17,
@@ -2445,9 +2448,9 @@
           "period_split": "TRAINING",
           "equity": 10311.5,
           "drawdown_dollars": 103.91,
-          "drawdown_pct": 1.0,
+          "drawdown_pct": 1,
           "net_pnl": -51.82,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 18,
@@ -2480,8 +2483,8 @@
           "date": "2026-09-11",
           "period_split": "TRAINING",
           "equity": 10455.5,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 97.62,
           "realized_r": 1.885
         },
@@ -2495,7 +2498,7 @@
           "drawdown_dollars": 52.3,
           "drawdown_pct": 0.5,
           "net_pnl": -52.3,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 22,
@@ -2504,8 +2507,8 @@
           "date": "2026-09-16",
           "period_split": "TRAINING",
           "equity": 10501.34,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 98.14,
           "realized_r": 1.887
         },
@@ -2519,7 +2522,7 @@
           "drawdown_dollars": 52.5,
           "drawdown_pct": 0.5,
           "net_pnl": -52.5,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 24,
@@ -2529,9 +2532,9 @@
           "period_split": "TRAINING",
           "equity": 10396.59,
           "drawdown_dollars": 104.75,
-          "drawdown_pct": 1.0,
+          "drawdown_pct": 1,
           "net_pnl": -52.25,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 25,
@@ -2543,7 +2546,7 @@
           "drawdown_dollars": 156.72,
           "drawdown_pct": 1.49,
           "net_pnl": -51.97,
-          "realized_r": -1.0
+          "realized_r": -1
         }
       ]
     },
@@ -2552,13 +2555,13 @@
       "winning_trades": 3,
       "losing_trades": 3,
       "breakeven_trades": 0,
-      "win_rate_pct": 50.0,
-      "decisive_win_rate_pct": 50.0,
+      "win_rate_pct": 50,
+      "decisive_win_rate_pct": 50,
       "gross_profit": 295.66,
       "gross_loss": -156.84,
       "raw_gross_profit_before_costs": 300.52,
       "raw_gross_loss_before_costs": -149.69,
-      "total_trading_costs": 12.0,
+      "total_trading_costs": 12,
       "net_profit": 138.82,
       "net_return_pct": 1.39,
       "profit_factor": 1.89,
@@ -2574,7 +2577,7 @@
       "max_consecutive_losses": 1,
       "avg_trade_duration_minutes": 76,
       "avg_trade_duration_display": "1h 16m",
-      "initial_capital": 10000.0,
+      "initial_capital": 10000,
       "final_equity": 10138.82,
       "long_short_breakdown": {
         "long": {
@@ -2582,7 +2585,7 @@
           "wins": 1,
           "losses": 1,
           "breakevens": 0,
-          "win_rate_pct": 50.0,
+          "win_rate_pct": 50,
           "net_pnl": 44.57,
           "avg_r": 0.43
         },
@@ -2591,7 +2594,7 @@
           "wins": 2,
           "losses": 2,
           "breakevens": 0,
-          "win_rate_pct": 50.0,
+          "win_rate_pct": 50,
           "net_pnl": 94.25,
           "avg_r": 0.46
         }
@@ -2602,7 +2605,7 @@
           "wins": 1,
           "losses": 3,
           "breakevens": 0,
-          "win_rate_pct": 25.0,
+          "win_rate_pct": 25,
           "net_pnl": -59.57,
           "avg_r": -0.28
         },
@@ -2611,7 +2614,7 @@
           "wins": 2,
           "losses": 0,
           "breakevens": 0,
-          "win_rate_pct": 100.0,
+          "win_rate_pct": 100,
           "net_pnl": 198.39,
           "avg_r": 1.92
         }
@@ -2622,7 +2625,7 @@
           "trades": 4,
           "wins": 2,
           "losses": 2,
-          "win_rate_pct": 50.0,
+          "win_rate_pct": 50,
           "net_pnl": 94.25,
           "return_pct": 0.94,
           "cumulative_r": 1.84
@@ -2632,7 +2635,7 @@
           "trades": 2,
           "wins": 1,
           "losses": 1,
-          "win_rate_pct": 50.0,
+          "win_rate_pct": 50,
           "net_pnl": 44.57,
           "return_pct": 0.45,
           "cumulative_r": 0.86
@@ -2643,10 +2646,10 @@
           "trade_num": 0,
           "timestamp": 1789983300,
           "date": "2026-09-21",
-          "equity": 10000.0,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 0.0
+          "equity": 10000,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 0
         },
         {
           "trade_num": 1,
@@ -2658,7 +2661,7 @@
           "drawdown_dollars": 51.7,
           "drawdown_pct": 0.52,
           "net_pnl": -51.7,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 2,
@@ -2667,8 +2670,8 @@
           "date": "2026-09-22",
           "period_split": "VALIDATION",
           "equity": 10046.44,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 98.14,
           "realized_r": 1.907
         },
@@ -2679,8 +2682,8 @@
           "date": "2026-09-23",
           "period_split": "VALIDATION",
           "equity": 10146.69,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 100.25,
           "realized_r": 1.93
         },
@@ -2694,7 +2697,7 @@
           "drawdown_dollars": 52.44,
           "drawdown_pct": 0.52,
           "net_pnl": -52.44,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 5,
@@ -2703,8 +2706,8 @@
           "date": "2026-10-02",
           "period_split": "VALIDATION",
           "equity": 10191.52,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
           "net_pnl": 97.27,
           "realized_r": 1.864
         },
@@ -2718,7 +2721,7 @@
           "drawdown_dollars": 52.7,
           "drawdown_pct": 0.52,
           "net_pnl": -52.7,
-          "realized_r": -1.0
+          "realized_r": -1
         }
       ]
     },
@@ -2749,7 +2752,7 @@
       "max_consecutive_losses": 7,
       "avg_trade_duration_minutes": 109,
       "avg_trade_duration_display": "1h 49m",
-      "initial_capital": 10000.0,
+      "initial_capital": 10000,
       "final_equity": 9683.96,
       "long_short_breakdown": {
         "long": {
@@ -2766,9 +2769,9 @@
           "wins": 0,
           "losses": 3,
           "breakevens": 0,
-          "win_rate_pct": 0.0,
+          "win_rate_pct": 0,
           "net_pnl": -155.94,
-          "avg_r": -1.0
+          "avg_r": -1
         }
       },
       "session_breakdown": {
@@ -2786,9 +2789,9 @@
           "wins": 0,
           "losses": 3,
           "breakevens": 0,
-          "win_rate_pct": 0.0,
+          "win_rate_pct": 0,
           "net_pnl": -154.62,
-          "avg_r": -1.0
+          "avg_r": -1
         }
       },
       "monthly_performance": [
@@ -2808,10 +2811,10 @@
           "trade_num": 0,
           "timestamp": 1791388200,
           "date": "2026-10-07",
-          "equity": 10000.0,
-          "drawdown_dollars": 0.0,
-          "drawdown_pct": 0.0,
-          "net_pnl": 0.0
+          "equity": 10000,
+          "drawdown_dollars": 0,
+          "drawdown_pct": 0,
+          "net_pnl": 0
         },
         {
           "trade_num": 1,
@@ -2823,7 +2826,7 @@
           "drawdown_dollars": 52.39,
           "drawdown_pct": 0.52,
           "net_pnl": -52.39,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 2,
@@ -2835,7 +2838,7 @@
           "drawdown_dollars": 104.56,
           "drawdown_pct": 1.05,
           "net_pnl": -52.17,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 3,
@@ -2847,7 +2850,7 @@
           "drawdown_dollars": 156.44,
           "drawdown_pct": 1.56,
           "net_pnl": -51.88,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 4,
@@ -2871,7 +2874,7 @@
           "drawdown_dollars": 259.42,
           "drawdown_pct": 2.59,
           "net_pnl": -51.38,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 6,
@@ -2883,7 +2886,7 @@
           "drawdown_dollars": 310.55,
           "drawdown_pct": 3.11,
           "net_pnl": -51.13,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 7,
@@ -2895,7 +2898,7 @@
           "drawdown_dollars": 361.4,
           "drawdown_pct": 3.61,
           "net_pnl": -50.85,
-          "realized_r": -1.0
+          "realized_r": -1
         },
         {
           "trade_num": 8,
@@ -2951,7 +2954,7 @@
     "max_consecutive_losses": 12,
     "avg_trade_duration_minutes": 121,
     "avg_trade_duration_display": "2h 1m",
-    "initial_capital": 10000.0,
+    "initial_capital": 10000,
     "final_equity": 9487.87,
     "long_short_breakdown": {
       "long": {
@@ -2988,9 +2991,9 @@
         "wins": 0,
         "losses": 0,
         "breakevens": 0,
-        "win_rate_pct": 0.0,
-        "net_pnl": 0.0,
-        "avg_r": 0.0
+        "win_rate_pct": 0,
+        "net_pnl": 0,
+        "avg_r": 0
       }
     },
     "monthly_performance": [
@@ -3030,10 +3033,10 @@
         "trade_num": 0,
         "timestamp": 1786355100,
         "date": "2026-08-10",
-        "equity": 10000.0,
-        "drawdown_dollars": 0.0,
-        "drawdown_pct": 0.0,
-        "net_pnl": 0.0
+        "equity": 10000,
+        "drawdown_dollars": 0,
+        "drawdown_pct": 0,
+        "net_pnl": 0
       },
       {
         "trade_num": 1,
@@ -3042,8 +3045,8 @@
         "date": "2026-08-10",
         "period_split": "TRAINING",
         "equity": 10093.88,
-        "drawdown_dollars": 0.0,
-        "drawdown_pct": 0.0,
+        "drawdown_dollars": 0,
+        "drawdown_pct": 0,
         "net_pnl": 93.88,
         "realized_r": 1.878
       },
@@ -3054,8 +3057,8 @@
         "date": "2026-08-10",
         "period_split": "TRAINING",
         "equity": 10190.94,
-        "drawdown_dollars": 0.0,
-        "drawdown_pct": 0.0,
+        "drawdown_dollars": 0,
+        "drawdown_pct": 0,
         "net_pnl": 97.06,
         "realized_r": 1.923
       },
@@ -3066,8 +3069,8 @@
         "date": "2026-08-11",
         "period_split": "TRAINING",
         "equity": 10286.31,
-        "drawdown_dollars": 0.0,
-        "drawdown_pct": 0.0,
+        "drawdown_dollars": 0,
+        "drawdown_pct": 0,
         "net_pnl": 95.37,
         "realized_r": 1.872
       },
@@ -3081,7 +3084,7 @@
         "drawdown_dollars": 51.43,
         "drawdown_pct": 0.5,
         "net_pnl": -51.43,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 5,
@@ -3090,8 +3093,8 @@
         "date": "2026-08-12",
         "period_split": "TRAINING",
         "equity": 10331.73,
-        "drawdown_dollars": 0.0,
-        "drawdown_pct": 0.0,
+        "drawdown_dollars": 0,
+        "drawdown_pct": 0,
         "net_pnl": 96.85,
         "realized_r": 1.892
       },
@@ -3105,7 +3108,7 @@
         "drawdown_dollars": 51.66,
         "drawdown_pct": 0.5,
         "net_pnl": -51.66,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 7,
@@ -3114,8 +3117,8 @@
         "date": "2026-08-13",
         "period_split": "TRAINING",
         "equity": 10379.3,
-        "drawdown_dollars": 0.0,
-        "drawdown_pct": 0.0,
+        "drawdown_dollars": 0,
+        "drawdown_pct": 0,
         "net_pnl": 99.23,
         "realized_r": 1.931
       },
@@ -3129,7 +3132,7 @@
         "drawdown_dollars": 51.9,
         "drawdown_pct": 0.5,
         "net_pnl": -51.9,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 9,
@@ -3138,8 +3141,8 @@
         "date": "2026-08-18",
         "period_split": "TRAINING",
         "equity": 10426.8,
-        "drawdown_dollars": 0.0,
-        "drawdown_pct": 0.0,
+        "drawdown_dollars": 0,
+        "drawdown_pct": 0,
         "net_pnl": 99.4,
         "realized_r": 1.925
       },
@@ -3153,7 +3156,7 @@
         "drawdown_dollars": 52.13,
         "drawdown_pct": 0.5,
         "net_pnl": -52.13,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 11,
@@ -3162,10 +3165,10 @@
         "date": "2026-08-18",
         "period_split": "TRAINING",
         "equity": 10322.8,
-        "drawdown_dollars": 104.0,
-        "drawdown_pct": 1.0,
+        "drawdown_dollars": 104,
+        "drawdown_pct": 1,
         "net_pnl": -51.87,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 12,
@@ -3177,7 +3180,7 @@
         "drawdown_dollars": 155.61,
         "drawdown_pct": 1.49,
         "net_pnl": -51.61,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 13,
@@ -3189,7 +3192,7 @@
         "drawdown_dollars": 206.97,
         "drawdown_pct": 1.98,
         "net_pnl": -51.36,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 14,
@@ -3225,7 +3228,7 @@
         "drawdown_dollars": 61.89,
         "drawdown_pct": 0.59,
         "net_pnl": -52.08,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 17,
@@ -3234,8 +3237,8 @@
         "date": "2026-08-20",
         "period_split": "TRAINING",
         "equity": 10462.68,
-        "drawdown_dollars": 0.0,
-        "drawdown_pct": 0.0,
+        "drawdown_dollars": 0,
+        "drawdown_pct": 0,
         "net_pnl": 97.77,
         "realized_r": 1.887
       },
@@ -3246,8 +3249,8 @@
         "date": "2026-08-20",
         "period_split": "TRAINING",
         "equity": 10564.11,
-        "drawdown_dollars": 0.0,
-        "drawdown_pct": 0.0,
+        "drawdown_dollars": 0,
+        "drawdown_pct": 0,
         "net_pnl": 101.43,
         "realized_r": 1.939
       },
@@ -3261,7 +3264,7 @@
         "drawdown_dollars": 52.82,
         "drawdown_pct": 0.5,
         "net_pnl": -52.82,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 20,
@@ -3270,9 +3273,9 @@
         "date": "2026-08-21",
         "period_split": "TRAINING",
         "equity": 10613.29,
-        "drawdown_dollars": 0.0,
-        "drawdown_pct": 0.0,
-        "net_pnl": 102.0,
+        "drawdown_dollars": 0,
+        "drawdown_pct": 0,
+        "net_pnl": 102,
         "realized_r": 1.941
       },
       {
@@ -3285,7 +3288,7 @@
         "drawdown_dollars": 53.07,
         "drawdown_pct": 0.5,
         "net_pnl": -53.07,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 22,
@@ -3295,9 +3298,9 @@
         "period_split": "TRAINING",
         "equity": 10507.42,
         "drawdown_dollars": 105.87,
-        "drawdown_pct": 1.0,
+        "drawdown_pct": 1,
         "net_pnl": -52.8,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 23,
@@ -3321,7 +3324,7 @@
         "drawdown_dollars": 58.83,
         "drawdown_pct": 0.55,
         "net_pnl": -53.04,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 25,
@@ -3333,7 +3336,7 @@
         "drawdown_dollars": 111.6,
         "drawdown_pct": 1.05,
         "net_pnl": -52.77,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 26,
@@ -3354,8 +3357,8 @@
         "date": "2026-08-25",
         "period_split": "TRAINING",
         "equity": 10705.09,
-        "drawdown_dollars": 0.0,
-        "drawdown_pct": 0.0,
+        "drawdown_dollars": 0,
+        "drawdown_pct": 0,
         "net_pnl": 102.62,
         "realized_r": 1.936
       },
@@ -3369,7 +3372,7 @@
         "drawdown_dollars": 53.53,
         "drawdown_pct": 0.5,
         "net_pnl": -53.53,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 29,
@@ -3378,8 +3381,8 @@
         "date": "2026-08-28",
         "period_split": "TRAINING",
         "equity": 10753.24,
-        "drawdown_dollars": 0.0,
-        "drawdown_pct": 0.0,
+        "drawdown_dollars": 0,
+        "drawdown_pct": 0,
         "net_pnl": 101.68,
         "realized_r": 1.909
       },
@@ -3390,8 +3393,8 @@
         "date": "2026-08-28",
         "period_split": "TRAINING",
         "equity": 10858.71,
-        "drawdown_dollars": 0.0,
-        "drawdown_pct": 0.0,
+        "drawdown_dollars": 0,
+        "drawdown_pct": 0,
         "net_pnl": 105.47,
         "realized_r": 1.962
       },
@@ -3405,7 +3408,7 @@
         "drawdown_dollars": 54.29,
         "drawdown_pct": 0.5,
         "net_pnl": -54.29,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 32,
@@ -3415,9 +3418,9 @@
         "period_split": "TRAINING",
         "equity": 10750.4,
         "drawdown_dollars": 108.31,
-        "drawdown_pct": 1.0,
+        "drawdown_pct": 1,
         "net_pnl": -54.02,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 33,
@@ -3429,7 +3432,7 @@
         "drawdown_dollars": 162.06,
         "drawdown_pct": 1.49,
         "net_pnl": -53.75,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 34,
@@ -3441,7 +3444,7 @@
         "drawdown_dollars": 215.54,
         "drawdown_pct": 1.98,
         "net_pnl": -53.48,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 35,
@@ -3453,7 +3456,7 @@
         "drawdown_dollars": 268.76,
         "drawdown_pct": 2.48,
         "net_pnl": -53.22,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 36,
@@ -3461,11 +3464,11 @@
         "timestamp": 1788543000,
         "date": "2026-09-04",
         "period_split": "TRAINING",
-        "equity": 10537.0,
+        "equity": 10537,
         "drawdown_dollars": 321.71,
         "drawdown_pct": 2.96,
         "net_pnl": -52.95,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 37,
@@ -3477,7 +3480,7 @@
         "drawdown_dollars": 374.4,
         "drawdown_pct": 3.45,
         "net_pnl": -52.69,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 38,
@@ -3489,7 +3492,7 @@
         "drawdown_dollars": 426.82,
         "drawdown_pct": 3.93,
         "net_pnl": -52.42,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 39,
@@ -3501,7 +3504,7 @@
         "drawdown_dollars": 478.98,
         "drawdown_pct": 4.41,
         "net_pnl": -52.16,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 40,
@@ -3513,7 +3516,7 @@
         "drawdown_dollars": 530.88,
         "drawdown_pct": 4.89,
         "net_pnl": -51.9,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 41,
@@ -3523,7 +3526,7 @@
         "period_split": "TRAINING",
         "equity": 10424.56,
         "drawdown_dollars": 434.15,
-        "drawdown_pct": 4.0,
+        "drawdown_pct": 4,
         "net_pnl": 96.73,
         "realized_r": 1.873
       },
@@ -3537,7 +3540,7 @@
         "drawdown_dollars": 486.27,
         "drawdown_pct": 4.48,
         "net_pnl": -52.12,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 43,
@@ -3561,7 +3564,7 @@
         "drawdown_dollars": 439.91,
         "drawdown_pct": 4.05,
         "net_pnl": -52.36,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 45,
@@ -3570,10 +3573,10 @@
         "date": "2026-09-11",
         "period_split": "TRAINING",
         "equity": 10366.71,
-        "drawdown_dollars": 492.0,
+        "drawdown_dollars": 492,
         "drawdown_pct": 4.53,
         "net_pnl": -52.09,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 46,
@@ -3585,7 +3588,7 @@
         "drawdown_dollars": 543.83,
         "drawdown_pct": 5.01,
         "net_pnl": -51.83,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 47,
@@ -3597,7 +3600,7 @@
         "drawdown_dollars": 595.4,
         "drawdown_pct": 5.48,
         "net_pnl": -51.57,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 48,
@@ -3609,7 +3612,7 @@
         "drawdown_dollars": 646.72,
         "drawdown_pct": 5.96,
         "net_pnl": -51.32,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 49,
@@ -3621,7 +3624,7 @@
         "drawdown_dollars": 697.78,
         "drawdown_pct": 6.43,
         "net_pnl": -51.06,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 50,
@@ -3633,7 +3636,7 @@
         "drawdown_dollars": 748.58,
         "drawdown_pct": 6.89,
         "net_pnl": -50.8,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 51,
@@ -3645,7 +3648,7 @@
         "drawdown_dollars": 799.13,
         "drawdown_pct": 7.36,
         "net_pnl": -50.55,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 52,
@@ -3657,7 +3660,7 @@
         "drawdown_dollars": 849.43,
         "drawdown_pct": 7.82,
         "net_pnl": -50.3,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 53,
@@ -3669,7 +3672,7 @@
         "drawdown_dollars": 899.48,
         "drawdown_pct": 8.28,
         "net_pnl": -50.05,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 54,
@@ -3681,7 +3684,7 @@
         "drawdown_dollars": 949.28,
         "drawdown_pct": 8.74,
         "net_pnl": -49.8,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 55,
@@ -3693,7 +3696,7 @@
         "drawdown_dollars": 998.83,
         "drawdown_pct": 9.2,
         "net_pnl": -49.55,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 56,
@@ -3717,7 +3720,7 @@
         "drawdown_dollars": 954.02,
         "drawdown_pct": 8.79,
         "net_pnl": -49.77,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 58,
@@ -3729,7 +3732,7 @@
         "drawdown_dollars": 1003.54,
         "drawdown_pct": 9.24,
         "net_pnl": -49.52,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 59,
@@ -3753,7 +3756,7 @@
         "drawdown_dollars": 957.88,
         "drawdown_pct": 8.82,
         "net_pnl": -49.75,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 61,
@@ -3765,7 +3768,7 @@
         "drawdown_dollars": 1007.38,
         "drawdown_pct": 9.28,
         "net_pnl": -49.5,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 62,
@@ -3777,7 +3780,7 @@
         "drawdown_dollars": 1056.64,
         "drawdown_pct": 9.73,
         "net_pnl": -49.26,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 63,
@@ -3789,7 +3792,7 @@
         "drawdown_dollars": 1105.65,
         "drawdown_pct": 10.18,
         "net_pnl": -49.01,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 64,
@@ -3801,7 +3804,7 @@
         "drawdown_dollars": 1154.42,
         "drawdown_pct": 10.63,
         "net_pnl": -48.77,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 65,
@@ -3824,8 +3827,8 @@
         "equity": 9750.07,
         "drawdown_dollars": 1108.64,
         "drawdown_pct": 10.21,
-        "net_pnl": -49.0,
-        "realized_r": -1.0
+        "net_pnl": -49,
+        "realized_r": -1
       },
       {
         "trade_num": 67,
@@ -3849,7 +3852,7 @@
         "drawdown_dollars": 1065.95,
         "drawdown_pct": 9.82,
         "net_pnl": -49.21,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 69,
@@ -3861,7 +3864,7 @@
         "drawdown_dollars": 1114.91,
         "drawdown_pct": 10.27,
         "net_pnl": -48.96,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 70,
@@ -3885,7 +3888,7 @@
         "drawdown_dollars": 1070.62,
         "drawdown_pct": 9.86,
         "net_pnl": -49.19,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 72,
@@ -3897,7 +3900,7 @@
         "drawdown_dollars": 1119.56,
         "drawdown_pct": 10.31,
         "net_pnl": -48.94,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 73,
@@ -3909,7 +3912,7 @@
         "drawdown_dollars": 1168.26,
         "drawdown_pct": 10.76,
         "net_pnl": -48.7,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 74,
@@ -3917,11 +3920,11 @@
         "timestamp": 1791472500,
         "date": "2026-10-08",
         "period_split": "TRAINING",
-        "equity": 9642.0,
+        "equity": 9642,
         "drawdown_dollars": 1216.71,
         "drawdown_pct": 11.2,
         "net_pnl": -48.45,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 75,
@@ -3933,7 +3936,7 @@
         "drawdown_dollars": 1264.92,
         "drawdown_pct": 11.65,
         "net_pnl": -48.21,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 76,
@@ -3945,7 +3948,7 @@
         "drawdown_dollars": 1312.89,
         "drawdown_pct": 12.09,
         "net_pnl": -47.97,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 77,
@@ -3957,7 +3960,7 @@
         "drawdown_dollars": 1360.62,
         "drawdown_pct": 12.53,
         "net_pnl": -47.73,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 78,
@@ -3969,7 +3972,7 @@
         "drawdown_dollars": 1408.11,
         "drawdown_pct": 12.97,
         "net_pnl": -47.49,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 79,
@@ -3993,7 +3996,7 @@
         "drawdown_dollars": 1367.27,
         "drawdown_pct": 12.59,
         "net_pnl": -47.7,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 81,
@@ -4017,7 +4020,7 @@
         "drawdown_dollars": 1323.16,
         "drawdown_pct": 12.19,
         "net_pnl": -47.92,
-        "realized_r": -1.0
+        "realized_r": -1
       },
       {
         "trade_num": 83,
@@ -4029,7 +4032,7 @@
         "drawdown_dollars": 1370.84,
         "drawdown_pct": 12.62,
         "net_pnl": -47.68,
-        "realized_r": -1.0
+        "realized_r": -1
       }
     ]
   },
@@ -4052,24 +4055,24 @@
       "stop_loss": 4414.35,
       "take_profit": 4432.79,
       "exit_price": 4432.79,
-      "position_size_oz": 7.731,
-      "position_lots": 0.0773,
-      "risk_dollars": 50.0,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 18.45,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": 1.855,
-      "gross_pnl": 95.02,
-      "spread_cost": 1.55,
-      "commission_cost": 0.54,
-      "slippage_cost": 0.15,
-      "total_costs": 2.24,
-      "net_pnl": 92.77,
-      "equity_before": 10000.0,
-      "equity_after": 10092.77,
+      "planned_rr": 2,
+      "realized_r": 1.962,
+      "gross_pnl": 36.87,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.05,
+      "total_costs": 0.68,
+      "net_pnl": 36.19,
+      "equity_before": 10000,
+      "equity_after": 10036.19,
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4419.20 \u2013 $4421.80",
+      "fvg_zone": "$4419.20 – $4421.80",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_HIGH_TP"
     },
@@ -4089,26 +4092,26 @@
       "duration_minutes": 180,
       "entry_price": 4428.95,
       "stop_loss": 4414.42,
-      "take_profit": 4458.0,
+      "take_profit": 4458,
       "exit_price": 4446.1,
-      "position_size_oz": 3.399,
-      "position_lots": 0.034,
-      "risk_dollars": 50.46,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 43.59,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": 1.134,
-      "gross_pnl": 58.29,
-      "spread_cost": 0.68,
-      "commission_cost": 0.24,
-      "slippage_cost": 0.17,
-      "total_costs": 1.09,
-      "net_pnl": 57.2,
-      "equity_before": 10092.77,
-      "equity_after": 10149.97,
+      "planned_rr": 2,
+      "realized_r": 1.165,
+      "gross_pnl": 51.45,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.05,
+      "total_costs": 0.68,
+      "net_pnl": 50.77,
+      "equity_before": 10036.19,
+      "equity_after": 10086.96,
       "outcome": "WIN",
       "exit_reason": "TIME_EXIT",
       "sweep_type": "Asian Low Sweep + Bullish MSS",
-      "fvg_zone": "$4428.40 \u2013 $4429.50",
+      "fvg_zone": "$4428.40 – $4429.50",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "MAX_HOLD_CLOSE"
     },
@@ -4130,24 +4133,24 @@
       "stop_loss": 4460.36,
       "take_profit": 4431.39,
       "exit_price": 4446.8,
-      "position_size_oz": 5.087,
-      "position_lots": 0.0509,
-      "risk_dollars": 50.75,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 28.98,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": 0.359,
-      "gross_pnl": 19.84,
-      "spread_cost": 1.02,
-      "commission_cost": 0.36,
-      "slippage_cost": 0.25,
-      "total_costs": 1.63,
-      "net_pnl": 18.21,
-      "equity_before": 10149.97,
-      "equity_after": 10168.18,
+      "planned_rr": 2,
+      "realized_r": 0.38,
+      "gross_pnl": 11.7,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.05,
+      "total_costs": 0.68,
+      "net_pnl": 11.02,
+      "equity_before": 10086.96,
+      "equity_after": 10097.98,
       "outcome": "WIN",
       "exit_reason": "TIME_EXIT",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4450.20 \u2013 $4451.20",
+      "fvg_zone": "$4450.20 – $4451.20",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "MAX_HOLD_CLOSE"
     },
@@ -4169,24 +4172,24 @@
       "stop_loss": 4464.76,
       "take_profit": 4435.17,
       "exit_price": 4435.17,
-      "position_size_oz": 4.993,
-      "position_lots": 0.0499,
-      "risk_dollars": 50.84,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 29.58,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": 1.909,
-      "gross_pnl": 98.51,
-      "spread_cost": 1.0,
-      "commission_cost": 0.35,
-      "slippage_cost": 0.1,
-      "total_costs": 1.45,
-      "net_pnl": 97.06,
-      "equity_before": 10168.18,
-      "equity_after": 10265.24,
+      "planned_rr": 2,
+      "realized_r": 1.978,
+      "gross_pnl": 59.19,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.05,
+      "total_costs": 0.68,
+      "net_pnl": 58.51,
+      "equity_before": 10097.98,
+      "equity_after": 10156.49,
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4454.20 \u2013 $4455.60",
+      "fvg_zone": "$4454.20 – $4455.60",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_LOW_TP"
     },
@@ -4208,24 +4211,24 @@
       "stop_loss": 4682.54,
       "take_profit": 4721.58,
       "exit_price": 4721.58,
-      "position_size_oz": 3.849,
-      "position_lots": 0.0385,
-      "risk_dollars": 51.33,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 39.03,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": 1.93,
-      "gross_pnl": 100.2,
-      "spread_cost": 0.77,
-      "commission_cost": 0.27,
-      "slippage_cost": 0.08,
-      "total_costs": 1.12,
-      "net_pnl": 99.08,
-      "equity_before": 10265.24,
-      "equity_after": 10364.32,
+      "planned_rr": 2,
+      "realized_r": 1.983,
+      "gross_pnl": 78.09,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.05,
+      "total_costs": 0.68,
+      "net_pnl": 77.41,
+      "equity_before": 10156.49,
+      "equity_after": 10233.9,
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4693.20 \u2013 $4697.90",
+      "fvg_zone": "$4693.20 – $4697.90",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_HIGH_TP"
     },
@@ -4247,24 +4250,24 @@
       "stop_loss": 4668.74,
       "take_profit": 4638.61,
       "exit_price": 4647.1,
-      "position_size_oz": 5.0,
-      "position_lots": 0.05,
-      "risk_dollars": 51.82,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 30.12,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": 1.088,
-      "gross_pnl": 58.0,
-      "spread_cost": 1.0,
-      "commission_cost": 0.35,
-      "slippage_cost": 0.25,
-      "total_costs": 1.6,
-      "net_pnl": 56.4,
-      "equity_before": 10364.32,
-      "equity_after": 10420.72,
+      "planned_rr": 2,
+      "realized_r": 1.133,
+      "gross_pnl": 34.8,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.05,
+      "total_costs": 0.68,
+      "net_pnl": 34.12,
+      "equity_before": 10233.9,
+      "equity_after": 10268.02,
       "outcome": "WIN",
       "exit_reason": "TIME_EXIT",
       "sweep_type": "Asian High Sweep + Bearish MSS",
-      "fvg_zone": "$4657.30 \u2013 $4660.10",
+      "fvg_zone": "$4657.30 – $4660.10",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "MAX_HOLD_CLOSE"
     },
@@ -4286,24 +4289,24 @@
       "stop_loss": 4500.99,
       "take_profit": 4471.93,
       "exit_price": 4500.99,
-      "position_size_oz": 5.208,
-      "position_lots": 0.0521,
-      "risk_dollars": 52.1,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 29.07,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
-      "gross_pnl": -50.46,
-      "spread_cost": 1.04,
-      "commission_cost": 0.36,
-      "slippage_cost": 0.26,
-      "total_costs": 1.67,
-      "net_pnl": -52.13,
-      "equity_before": 10420.72,
-      "equity_after": 10368.59,
+      "planned_rr": 2,
+      "realized_r": -1,
+      "gross_pnl": -29.07,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.12,
+      "total_costs": 0.75,
+      "net_pnl": -29.82,
+      "equity_before": 10268.02,
+      "equity_after": 10238.2,
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4490.60 \u2013 $4492.00",
+      "fvg_zone": "$4490.60 – $4492.00",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_HIGH_SL"
     },
@@ -4325,24 +4328,24 @@
       "stop_loss": 4379.07,
       "take_profit": 4358.62,
       "exit_price": 4371.93,
-      "position_size_oz": 7.264,
-      "position_lots": 0.0726,
-      "risk_dollars": 51.84,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 20.46,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": 0.0,
-      "gross_pnl": 2.32,
-      "spread_cost": 1.45,
-      "commission_cost": 0.51,
-      "slippage_cost": 0.36,
-      "total_costs": 2.32,
-      "net_pnl": 0.0,
-      "equity_before": 10368.59,
-      "equity_after": 10368.59,
+      "planned_rr": 2,
+      "realized_r": 0,
+      "gross_pnl": 0.75,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.12,
+      "total_costs": 0.75,
+      "net_pnl": 0,
+      "equity_before": 10238.2,
+      "equity_after": 10238.2,
       "outcome": "BREAKEVEN",
       "exit_reason": "BREAKEVEN_STOP",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4371.70 \u2013 $4372.80",
+      "fvg_zone": "$4371.70 – $4372.80",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_HIGH_SL"
     },
@@ -4364,24 +4367,24 @@
       "stop_loss": 4459.41,
       "take_profit": 4429.53,
       "exit_price": 4449.13,
-      "position_size_oz": 5.044,
-      "position_lots": 0.0504,
-      "risk_dollars": 51.84,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 29.88,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": 0.0,
-      "gross_pnl": 1.61,
-      "spread_cost": 1.01,
-      "commission_cost": 0.35,
-      "slippage_cost": 0.25,
-      "total_costs": 1.61,
-      "net_pnl": 0.0,
-      "equity_before": 10368.59,
-      "equity_after": 10368.59,
+      "planned_rr": 2,
+      "realized_r": 0,
+      "gross_pnl": 0.75,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.12,
+      "total_costs": 0.75,
+      "net_pnl": 0,
+      "equity_before": 10238.2,
+      "equity_after": 10238.2,
       "outcome": "BREAKEVEN",
       "exit_reason": "BREAKEVEN_STOP",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4448.90 \u2013 $4450.00",
+      "fvg_zone": "$4448.90 – $4450.00",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_HIGH_SL"
     },
@@ -4403,24 +4406,24 @@
       "stop_loss": 4446.32,
       "take_profit": 4469.05,
       "exit_price": 4446.32,
-      "position_size_oz": 6.567,
-      "position_lots": 0.0657,
-      "risk_dollars": 51.84,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 22.74,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.001,
-      "gross_pnl": -49.77,
-      "spread_cost": 1.31,
-      "commission_cost": 0.46,
-      "slippage_cost": 0.33,
-      "total_costs": 2.1,
-      "net_pnl": -51.88,
-      "equity_before": 10368.59,
-      "equity_after": 10316.71,
+      "planned_rr": 2,
+      "realized_r": -1,
+      "gross_pnl": -22.74,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.12,
+      "total_costs": 0.75,
+      "net_pnl": -23.49,
+      "equity_before": 10238.2,
+      "equity_after": 10214.71,
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4453.20 \u2013 $4454.60",
+      "fvg_zone": "$4453.20 – $4454.60",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_LOW_SL"
     },
@@ -4442,24 +4445,24 @@
       "stop_loss": 4400.57,
       "take_profit": 4377.27,
       "exit_price": 4377.27,
-      "position_size_oz": 6.38,
-      "position_lots": 0.0638,
-      "risk_dollars": 51.58,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 23.31,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": 1.885,
-      "gross_pnl": 99.08,
-      "spread_cost": 1.28,
-      "commission_cost": 0.45,
-      "slippage_cost": 0.13,
-      "total_costs": 1.85,
-      "net_pnl": 97.23,
-      "equity_before": 10316.71,
-      "equity_after": 10413.94,
+      "planned_rr": 2,
+      "realized_r": 1.97,
+      "gross_pnl": 46.59,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.05,
+      "total_costs": 0.68,
+      "net_pnl": 45.91,
+      "equity_before": 10214.71,
+      "equity_after": 10260.62,
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Asian High Sweep + Bearish MSS",
-      "fvg_zone": "$4392.00 \u2013 $4393.60",
+      "fvg_zone": "$4392.00 – $4393.60",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_LOW_TP"
     },
@@ -4481,24 +4484,24 @@
       "stop_loss": 4361.48,
       "take_profit": 4385.09,
       "exit_price": 4385.09,
-      "position_size_oz": 6.359,
-      "position_lots": 0.0636,
-      "risk_dollars": 52.07,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 23.61,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": 1.887,
-      "gross_pnl": 100.09,
-      "spread_cost": 1.27,
-      "commission_cost": 0.45,
-      "slippage_cost": 0.13,
-      "total_costs": 1.84,
-      "net_pnl": 98.24,
-      "equity_before": 10413.94,
-      "equity_after": 10512.18,
+      "planned_rr": 2,
+      "realized_r": 1.971,
+      "gross_pnl": 47.22,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.05,
+      "total_costs": 0.68,
+      "net_pnl": 46.54,
+      "equity_before": 10260.62,
+      "equity_after": 10307.16,
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4367.70 \u2013 $4371.00",
+      "fvg_zone": "$4367.70 – $4371.00",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_HIGH_TP"
     },
@@ -4520,24 +4523,24 @@
       "stop_loss": 4423.87,
       "take_profit": 4443.16,
       "exit_price": 4423.87,
-      "position_size_oz": 7.784,
-      "position_lots": 0.0778,
-      "risk_dollars": 52.56,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 19.29,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
-      "gross_pnl": -50.05,
-      "spread_cost": 1.56,
-      "commission_cost": 0.54,
-      "slippage_cost": 0.39,
-      "total_costs": 2.49,
-      "net_pnl": -52.54,
-      "equity_before": 10512.18,
-      "equity_after": 10459.64,
+      "planned_rr": 2,
+      "realized_r": -1,
+      "gross_pnl": -19.29,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.12,
+      "total_costs": 0.75,
+      "net_pnl": -20.04,
+      "equity_before": 10307.16,
+      "equity_after": 10287.12,
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4428.90 \u2013 $4431.70",
+      "fvg_zone": "$4428.90 – $4431.70",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_LOW_SL"
     },
@@ -4559,24 +4562,24 @@
       "stop_loss": 4383.03,
       "take_profit": 4354.13,
       "exit_price": 4354.13,
-      "position_size_oz": 5.255,
-      "position_lots": 0.0525,
-      "risk_dollars": 52.3,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 28.89,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": 1.907,
-      "gross_pnl": 101.26,
-      "spread_cost": 1.05,
-      "commission_cost": 0.37,
-      "slippage_cost": 0.11,
-      "total_costs": 1.52,
-      "net_pnl": 99.73,
-      "equity_before": 10459.64,
-      "equity_after": 10559.37,
+      "planned_rr": 2,
+      "realized_r": 1.978,
+      "gross_pnl": 57.81,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.05,
+      "total_costs": 0.68,
+      "net_pnl": 57.13,
+      "equity_before": 10287.12,
+      "equity_after": 10344.25,
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4372.10 \u2013 $4374.70",
+      "fvg_zone": "$4372.10 – $4374.70",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_LOW_TP"
     },
@@ -4598,24 +4601,24 @@
       "stop_loss": 4356.73,
       "take_profit": 4317.94,
       "exit_price": 4317.94,
-      "position_size_oz": 3.984,
-      "position_lots": 0.0398,
-      "risk_dollars": 52.8,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 38.79,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": 1.93,
-      "gross_pnl": 103.03,
-      "spread_cost": 0.8,
-      "commission_cost": 0.28,
-      "slippage_cost": 0.08,
-      "total_costs": 1.16,
-      "net_pnl": 101.88,
-      "equity_before": 10559.37,
-      "equity_after": 10661.25,
+      "planned_rr": 2,
+      "realized_r": 1.982,
+      "gross_pnl": 77.58,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.05,
+      "total_costs": 0.68,
+      "net_pnl": 76.9,
+      "equity_before": 10344.25,
+      "equity_after": 10421.15,
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4343.20 \u2013 $4344.40",
+      "fvg_zone": "$4343.20 – $4344.40",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_LOW_TP"
     },
@@ -4637,24 +4640,24 @@
       "stop_loss": 4206.29,
       "take_profit": 4225.81,
       "exit_price": 4225.81,
-      "position_size_oz": 7.81,
-      "position_lots": 0.0781,
-      "risk_dollars": 53.31,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 19.53,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": 1.864,
-      "gross_pnl": 101.61,
-      "spread_cost": 1.56,
-      "commission_cost": 0.55,
-      "slippage_cost": 0.16,
-      "total_costs": 2.26,
-      "net_pnl": 99.34,
-      "equity_before": 10661.25,
-      "equity_after": 10760.59,
+      "planned_rr": 2,
+      "realized_r": 1.964,
+      "gross_pnl": 39.03,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.05,
+      "total_costs": 0.68,
+      "net_pnl": 38.35,
+      "equity_before": 10421.15,
+      "equity_after": 10459.5,
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4212.20 \u2013 $4213.40",
+      "fvg_zone": "$4212.20 – $4213.40",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_HIGH_TP"
     },
@@ -4676,24 +4679,24 @@
       "stop_loss": 4200.47,
       "take_profit": 4174.16,
       "exit_price": 4191.38,
-      "position_size_oz": 5.919,
-      "position_lots": 0.0592,
-      "risk_dollars": 53.8,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 26.31,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": 0.0,
-      "gross_pnl": 1.89,
-      "spread_cost": 1.18,
-      "commission_cost": 0.41,
-      "slippage_cost": 0.3,
-      "total_costs": 1.89,
-      "net_pnl": 0.0,
-      "equity_before": 10760.59,
-      "equity_after": 10760.59,
+      "planned_rr": 2,
+      "realized_r": 0,
+      "gross_pnl": 0.75,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.12,
+      "total_costs": 0.75,
+      "net_pnl": 0,
+      "equity_before": 10459.5,
+      "equity_after": 10459.5,
       "outcome": "BREAKEVEN",
       "exit_reason": "BREAKEVEN_STOP",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4190.30 \u2013 $4193.10",
+      "fvg_zone": "$4190.30 – $4193.10",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_HIGH_SL"
     },
@@ -4715,24 +4718,24 @@
       "stop_loss": 4206.35,
       "take_profit": 4224.5,
       "exit_price": 4212.72,
-      "position_size_oz": 8.448,
-      "position_lots": 0.0845,
-      "risk_dollars": 53.8,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 18.15,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": 0.0,
-      "gross_pnl": 2.7,
-      "spread_cost": 1.69,
-      "commission_cost": 0.59,
-      "slippage_cost": 0.42,
-      "total_costs": 2.7,
-      "net_pnl": 0.0,
-      "equity_before": 10760.59,
-      "equity_after": 10760.59,
+      "planned_rr": 2,
+      "realized_r": 0,
+      "gross_pnl": 0.75,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.12,
+      "total_costs": 0.75,
+      "net_pnl": 0,
+      "equity_before": 10459.5,
+      "equity_after": 10459.5,
       "outcome": "BREAKEVEN",
       "exit_reason": "BREAKEVEN_STOP",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4211.50 \u2013 $4213.30",
+      "fvg_zone": "$4211.50 – $4213.30",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_LOW_SL"
     },
@@ -4750,28 +4753,28 @@
       "entry_ts": 1791898800,
       "exit_ts": 1791899700,
       "duration_minutes": 15,
-      "entry_price": 4205.0,
+      "entry_price": 4205,
       "stop_loss": 4194.89,
       "take_profit": 4225.23,
       "exit_price": 4194.89,
-      "position_size_oz": 5.157,
-      "position_lots": 0.0516,
-      "risk_dollars": 53.8,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 30.33,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
-      "gross_pnl": -52.14,
-      "spread_cost": 1.03,
-      "commission_cost": 0.36,
-      "slippage_cost": 0.26,
-      "total_costs": 1.65,
-      "net_pnl": -53.79,
-      "equity_before": 10760.59,
-      "equity_after": 10706.8,
+      "planned_rr": 2,
+      "realized_r": -1,
+      "gross_pnl": -30.33,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.12,
+      "total_costs": 0.75,
+      "net_pnl": -31.08,
+      "equity_before": 10459.5,
+      "equity_after": 10428.42,
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4203.60 \u2013 $4206.40",
+      "fvg_zone": "$4203.60 – $4206.40",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_LOW_SL"
     },
@@ -4793,24 +4796,24 @@
       "stop_loss": 4151.81,
       "take_profit": 4180.13,
       "exit_price": 4180.13,
-      "position_size_oz": 5.486,
-      "position_lots": 0.0549,
-      "risk_dollars": 53.53,
+      "position_size_oz": 3,
+      "position_lots": 0.03,
+      "risk_dollars": 28.32,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": 1.905,
-      "gross_pnl": 103.57,
-      "spread_cost": 1.1,
-      "commission_cost": 0.38,
-      "slippage_cost": 0.11,
-      "total_costs": 1.59,
-      "net_pnl": 101.98,
-      "equity_before": 10706.8,
-      "equity_after": 10808.78,
+      "planned_rr": 2,
+      "realized_r": 1.976,
+      "gross_pnl": 56.64,
+      "spread_cost": 0.45,
+      "commission_cost": 0.18,
+      "slippage_cost": 0.05,
+      "total_costs": 0.68,
+      "net_pnl": 55.96,
+      "equity_before": 10428.42,
+      "equity_after": 10484.38,
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4160.40 \u2013 $4162.10",
+      "fvg_zone": "$4160.40 – $4162.10",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_HIGH_TP"
     }
@@ -4836,9 +4839,9 @@
       "exit_price": 4432.79,
       "position_size_oz": 7.731,
       "position_lots": 0.0773,
-      "risk_dollars": 50.0,
+      "risk_dollars": 50,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
+      "planned_rr": 2,
       "realized_r": 1.855,
       "gross_pnl": 95.02,
       "spread_cost": 1.55,
@@ -4846,12 +4849,12 @@
       "slippage_cost": 0.15,
       "total_costs": 2.24,
       "net_pnl": 92.77,
-      "equity_before": 10000.0,
+      "equity_before": 10000,
       "equity_after": 10092.77,
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4419.20 \u2013 $4421.80",
+      "fvg_zone": "$4419.20 – $4421.80",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_HIGH_TP"
     },
@@ -4871,13 +4874,13 @@
       "duration_minutes": 205,
       "entry_price": 4428.95,
       "stop_loss": 4414.42,
-      "take_profit": 4458.0,
-      "exit_price": 4458.0,
+      "take_profit": 4458,
+      "exit_price": 4458,
       "position_size_oz": 3.399,
       "position_lots": 0.034,
       "risk_dollars": 50.46,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
+      "planned_rr": 2,
       "realized_r": 1.937,
       "gross_pnl": 98.74,
       "spread_cost": 0.68,
@@ -4890,7 +4893,7 @@
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Asian Low Sweep + Bullish MSS",
-      "fvg_zone": "$4428.40 \u2013 $4429.50",
+      "fvg_zone": "$4428.40 – $4429.50",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_HIGH_TP"
     },
@@ -4916,8 +4919,8 @@
       "position_lots": 0.0425,
       "risk_dollars": 50.95,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -49.6,
       "spread_cost": 0.85,
       "commission_cost": 0.3,
@@ -4929,7 +4932,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4437.40 \u2013 $4439.20",
+      "fvg_zone": "$4437.40 – $4439.20",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_LOW_SL"
     },
@@ -4955,8 +4958,8 @@
       "position_lots": 0.0629,
       "risk_dollars": 50.7,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -48.68,
       "spread_cost": 1.26,
       "commission_cost": 0.44,
@@ -4968,7 +4971,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4407.70 \u2013 $4408.60",
+      "fvg_zone": "$4407.70 – $4408.60",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_HIGH_SL"
     },
@@ -4994,7 +4997,7 @@
       "position_lots": 0.0506,
       "risk_dollars": 50.44,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
+      "planned_rr": 2,
       "realized_r": 1.907,
       "gross_pnl": 97.65,
       "spread_cost": 1.01,
@@ -5007,7 +5010,7 @@
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4450.20 \u2013 $4451.20",
+      "fvg_zone": "$4450.20 – $4451.20",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_LOW_TP"
     },
@@ -5033,10 +5036,10 @@
       "position_lots": 0.05,
       "risk_dollars": 50.93,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
+      "planned_rr": 2,
       "realized_r": 1.909,
       "gross_pnl": 98.67,
-      "spread_cost": 1.0,
+      "spread_cost": 1,
       "commission_cost": 0.35,
       "slippage_cost": 0.1,
       "total_costs": 1.45,
@@ -5046,7 +5049,7 @@
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4454.20 \u2013 $4455.60",
+      "fvg_zone": "$4454.20 – $4455.60",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_LOW_TP"
     },
@@ -5072,8 +5075,8 @@
       "position_lots": 0.1009,
       "risk_dollars": 51.41,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -48.21,
       "spread_cost": 2.02,
       "commission_cost": 0.71,
@@ -5085,7 +5088,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Asian High Sweep + Bearish MSS",
-      "fvg_zone": "$4412.30 \u2013 $4414.50",
+      "fvg_zone": "$4412.30 – $4414.50",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_HIGH_SL"
     },
@@ -5111,8 +5114,8 @@
       "position_lots": 0.0633,
       "risk_dollars": 51.15,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -49.15,
       "spread_cost": 1.27,
       "commission_cost": 0.44,
@@ -5124,7 +5127,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4542.70 \u2013 $4544.80",
+      "fvg_zone": "$4542.70 – $4544.80",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_LOW_SL"
     },
@@ -5150,7 +5153,7 @@
       "position_lots": 0.0382,
       "risk_dollars": 50.9,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
+      "planned_rr": 2,
       "realized_r": 1.93,
       "gross_pnl": 99.36,
       "spread_cost": 0.76,
@@ -5163,7 +5166,7 @@
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4693.20 \u2013 $4697.90",
+      "fvg_zone": "$4693.20 – $4697.90",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_HIGH_TP"
     },
@@ -5181,7 +5184,7 @@
       "entry_ts": 1787652600,
       "exit_ts": 1787664000,
       "duration_minutes": 190,
-      "entry_price": 4693.0,
+      "entry_price": 4693,
       "stop_loss": 4703.52,
       "take_profit": 4671.97,
       "exit_price": 4671.97,
@@ -5189,7 +5192,7 @@
       "position_lots": 0.0474,
       "risk_dollars": 51.39,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
+      "planned_rr": 2,
       "realized_r": 1.914,
       "gross_pnl": 99.74,
       "spread_cost": 0.95,
@@ -5202,7 +5205,7 @@
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4692.70 \u2013 $4693.30",
+      "fvg_zone": "$4692.70 – $4693.30",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_LOW_TP"
     },
@@ -5228,8 +5231,8 @@
       "position_lots": 0.0352,
       "risk_dollars": 51.88,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -50.75,
       "spread_cost": 0.7,
       "commission_cost": 0.25,
@@ -5241,7 +5244,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4702.80 \u2013 $4704.40",
+      "fvg_zone": "$4702.80 – $4704.40",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_HIGH_SL"
     },
@@ -5267,10 +5270,10 @@
       "position_lots": 0.0498,
       "risk_dollars": 51.62,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
-      "gross_pnl": -50.0,
-      "spread_cost": 1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
+      "gross_pnl": -50,
+      "spread_cost": 1,
       "commission_cost": 0.35,
       "slippage_cost": 0.25,
       "total_costs": 1.59,
@@ -5280,7 +5283,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Asian High Sweep + Bearish MSS",
-      "fvg_zone": "$4657.30 \u2013 $4660.10",
+      "fvg_zone": "$4657.30 – $4660.10",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_HIGH_SL"
     },
@@ -5306,8 +5309,8 @@
       "position_lots": 0.0513,
       "risk_dollars": 51.36,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -49.75,
       "spread_cost": 1.03,
       "commission_cost": 0.36,
@@ -5319,7 +5322,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4490.60 \u2013 $4492.00",
+      "fvg_zone": "$4490.60 – $4492.00",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_HIGH_SL"
     },
@@ -5345,7 +5348,7 @@
       "position_lots": 0.0716,
       "risk_dollars": 51.11,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
+      "planned_rr": 2,
       "realized_r": 1.869,
       "gross_pnl": 97.6,
       "spread_cost": 1.43,
@@ -5358,7 +5361,7 @@
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4371.70 \u2013 $4372.80",
+      "fvg_zone": "$4371.70 – $4372.80",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_LOW_TP"
     },
@@ -5384,7 +5387,7 @@
       "position_lots": 0.0504,
       "risk_dollars": 51.58,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
+      "planned_rr": 2,
       "realized_r": 1.909,
       "gross_pnl": 99.95,
       "spread_cost": 1.01,
@@ -5397,7 +5400,7 @@
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4488.00 \u2013 $4489.00",
+      "fvg_zone": "$4488.00 – $4489.00",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_LOW_TP"
     },
@@ -5423,8 +5426,8 @@
       "position_lots": 0.0545,
       "risk_dollars": 52.08,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -50.35,
       "spread_cost": 1.09,
       "commission_cost": 0.38,
@@ -5436,7 +5439,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4441.20 \u2013 $4442.50",
+      "fvg_zone": "$4441.20 – $4442.50",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_HIGH_SL"
     },
@@ -5462,8 +5465,8 @@
       "position_lots": 0.0488,
       "risk_dollars": 51.82,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -50.26,
       "spread_cost": 0.98,
       "commission_cost": 0.34,
@@ -5475,7 +5478,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4441.70 \u2013 $4442.90",
+      "fvg_zone": "$4441.70 – $4442.90",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_HIGH_SL"
     },
@@ -5501,10 +5504,10 @@
       "position_lots": 0.0502,
       "risk_dollars": 51.56,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
+      "planned_rr": 2,
       "realized_r": 1.91,
       "gross_pnl": 99.91,
-      "spread_cost": 1.0,
+      "spread_cost": 1,
       "commission_cost": 0.35,
       "slippage_cost": 0.1,
       "total_costs": 1.45,
@@ -5514,7 +5517,7 @@
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4448.90 \u2013 $4450.00",
+      "fvg_zone": "$4448.90 – $4450.00",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_LOW_TP"
     },
@@ -5540,7 +5543,7 @@
       "position_lots": 0.0659,
       "risk_dollars": 52.05,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
+      "planned_rr": 2,
       "realized_r": -1.001,
       "gross_pnl": -49.97,
       "spread_cost": 1.32,
@@ -5553,7 +5556,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4453.20 \u2013 $4454.60",
+      "fvg_zone": "$4453.20 – $4454.60",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_LOW_SL"
     },
@@ -5579,7 +5582,7 @@
       "position_lots": 0.0641,
       "risk_dollars": 51.79,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
+      "planned_rr": 2,
       "realized_r": 1.885,
       "gross_pnl": 99.47,
       "spread_cost": 1.28,
@@ -5592,7 +5595,7 @@
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Asian High Sweep + Bearish MSS",
-      "fvg_zone": "$4392.00 \u2013 $4393.60",
+      "fvg_zone": "$4392.00 – $4393.60",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_LOW_TP"
     },
@@ -5618,8 +5621,8 @@
       "position_lots": 0.0449,
       "risk_dollars": 52.28,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -50.86,
       "spread_cost": 0.9,
       "commission_cost": 0.31,
@@ -5631,7 +5634,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4409.80 \u2013 $4410.60",
+      "fvg_zone": "$4409.80 – $4410.60",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_LOW_SL"
     },
@@ -5657,7 +5660,7 @@
       "position_lots": 0.0635,
       "risk_dollars": 52.02,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
+      "planned_rr": 2,
       "realized_r": 1.887,
       "gross_pnl": 99.99,
       "spread_cost": 1.27,
@@ -5670,7 +5673,7 @@
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4367.70 \u2013 $4371.00",
+      "fvg_zone": "$4367.70 – $4371.00",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_HIGH_TP"
     },
@@ -5688,7 +5691,7 @@
       "entry_ts": 1789636500,
       "exit_ts": 1789637100,
       "duration_minutes": 10,
-      "entry_price": 4353.0,
+      "entry_price": 4353,
       "stop_loss": 4348.1,
       "take_profit": 4362.8,
       "exit_price": 4348.1,
@@ -5696,8 +5699,8 @@
       "position_lots": 0.1006,
       "risk_dollars": 52.51,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -49.28,
       "spread_cost": 2.01,
       "commission_cost": 0.7,
@@ -5709,7 +5712,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4352.60 \u2013 $4353.40",
+      "fvg_zone": "$4352.60 – $4353.40",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_LOW_SL"
     },
@@ -5735,8 +5738,8 @@
       "position_lots": 0.0504,
       "risk_dollars": 52.24,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -50.64,
       "spread_cost": 1.01,
       "commission_cost": 0.35,
@@ -5748,7 +5751,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4399.60 \u2013 $4400.60",
+      "fvg_zone": "$4399.60 – $4400.60",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_LOW_SL"
     },
@@ -5774,8 +5777,8 @@
       "position_lots": 0.077,
       "risk_dollars": 51.98,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -49.5,
       "spread_cost": 1.54,
       "commission_cost": 0.54,
@@ -5787,7 +5790,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4428.90 \u2013 $4431.70",
+      "fvg_zone": "$4428.90 – $4431.70",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_LOW_SL"
     },
@@ -5813,8 +5816,8 @@
       "position_lots": 0.0473,
       "risk_dollars": 51.72,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -50.18,
       "spread_cost": 0.95,
       "commission_cost": 0.33,
@@ -5826,7 +5829,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4383.80 \u2013 $4387.60",
+      "fvg_zone": "$4383.80 – $4387.60",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_HIGH_SL"
     },
@@ -5852,7 +5855,7 @@
       "position_lots": 0.0517,
       "risk_dollars": 51.46,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
+      "planned_rr": 2,
       "realized_r": 1.907,
       "gross_pnl": 99.64,
       "spread_cost": 1.03,
@@ -5865,7 +5868,7 @@
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4372.10 \u2013 $4374.70",
+      "fvg_zone": "$4372.10 – $4374.70",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_LOW_TP"
     },
@@ -5891,7 +5894,7 @@
       "position_lots": 0.0392,
       "risk_dollars": 51.96,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
+      "planned_rr": 2,
       "realized_r": 1.93,
       "gross_pnl": 101.39,
       "spread_cost": 0.78,
@@ -5904,7 +5907,7 @@
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4343.20 \u2013 $4344.40",
+      "fvg_zone": "$4343.20 – $4344.40",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_LOW_TP"
     },
@@ -5930,8 +5933,8 @@
       "position_lots": 0.0583,
       "risk_dollars": 52.46,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -50.58,
       "spread_cost": 1.17,
       "commission_cost": 0.41,
@@ -5943,7 +5946,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Asian High Sweep + Bearish MSS",
-      "fvg_zone": "$4173.00 \u2013 $4173.30",
+      "fvg_zone": "$4173.00 – $4173.30",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_HIGH_SL"
     },
@@ -5969,7 +5972,7 @@
       "position_lots": 0.0765,
       "risk_dollars": 52.19,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
+      "planned_rr": 2,
       "realized_r": 1.864,
       "gross_pnl": 99.49,
       "spread_cost": 1.53,
@@ -5982,7 +5985,7 @@
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4212.20 \u2013 $4213.40",
+      "fvg_zone": "$4212.20 – $4213.40",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_HIGH_TP"
     },
@@ -6008,8 +6011,8 @@
       "position_lots": 0.1176,
       "risk_dollars": 52.68,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -48.93,
       "spread_cost": 2.35,
       "commission_cost": 0.82,
@@ -6021,7 +6024,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4211.30 \u2013 $4212.80",
+      "fvg_zone": "$4211.30 – $4212.80",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_LOW_SL"
     },
@@ -6047,8 +6050,8 @@
       "position_lots": 0.063,
       "risk_dollars": 52.42,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -50.38,
       "spread_cost": 1.26,
       "commission_cost": 0.44,
@@ -6060,7 +6063,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4131.90 \u2013 $4133.20",
+      "fvg_zone": "$4131.90 – $4133.20",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_HIGH_SL"
     },
@@ -6086,8 +6089,8 @@
       "position_lots": 0.0549,
       "risk_dollars": 52.16,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -50.41,
       "spread_cost": 1.1,
       "commission_cost": 0.38,
@@ -6099,7 +6102,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4149.30 \u2013 $4149.80",
+      "fvg_zone": "$4149.30 – $4149.80",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_HIGH_SL"
     },
@@ -6125,8 +6128,8 @@
       "position_lots": 0.0575,
       "risk_dollars": 51.89,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -50.04,
       "spread_cost": 1.15,
       "commission_cost": 0.4,
@@ -6134,11 +6137,11 @@
       "total_costs": 1.84,
       "net_pnl": -51.88,
       "equity_before": 10378.88,
-      "equity_after": 10327.0,
+      "equity_after": 10327,
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4221.20 \u2013 $4221.50",
+      "fvg_zone": "$4221.20 – $4221.50",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_LOW_SL"
     },
@@ -6164,7 +6167,7 @@
       "position_lots": 0.1365,
       "risk_dollars": 51.63,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
+      "planned_rr": 2,
       "realized_r": -0.999,
       "gross_pnl": -47.23,
       "spread_cost": 2.73,
@@ -6172,12 +6175,12 @@
       "slippage_cost": 0.68,
       "total_costs": 4.37,
       "net_pnl": -51.6,
-      "equity_before": 10327.0,
+      "equity_before": 10327,
       "equity_after": 10275.4,
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4198.90 \u2013 $4200.10",
+      "fvg_zone": "$4198.90 – $4200.10",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_LOW_SL"
     },
@@ -6203,8 +6206,8 @@
       "position_lots": 0.0565,
       "risk_dollars": 51.38,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -49.57,
       "spread_cost": 1.13,
       "commission_cost": 0.4,
@@ -6216,7 +6219,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing BSL Sweep + Bearish CHOCH/MSS",
-      "fvg_zone": "$4190.30 \u2013 $4193.10",
+      "fvg_zone": "$4190.30 – $4193.10",
       "htf_bias": "Bearish HTF",
       "intrabar_resolved_by": "BAR_HIGH_SL"
     },
@@ -6242,8 +6245,8 @@
       "position_lots": 0.0803,
       "risk_dollars": 51.12,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -48.56,
       "spread_cost": 1.61,
       "commission_cost": 0.56,
@@ -6255,7 +6258,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4211.50 \u2013 $4213.30",
+      "fvg_zone": "$4211.50 – $4213.30",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_LOW_SL"
     },
@@ -6273,7 +6276,7 @@
       "entry_ts": 1791898800,
       "exit_ts": 1791899700,
       "duration_minutes": 15,
-      "entry_price": 4205.0,
+      "entry_price": 4205,
       "stop_loss": 4194.89,
       "take_profit": 4225.23,
       "exit_price": 4194.89,
@@ -6281,8 +6284,8 @@
       "position_lots": 0.0488,
       "risk_dollars": 50.86,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
-      "realized_r": -1.0,
+      "planned_rr": 2,
+      "realized_r": -1,
       "gross_pnl": -49.29,
       "spread_cost": 0.98,
       "commission_cost": 0.34,
@@ -6294,7 +6297,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4203.60 \u2013 $4206.40",
+      "fvg_zone": "$4203.60 – $4206.40",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_LOW_SL"
     },
@@ -6320,7 +6323,7 @@
       "position_lots": 0.0519,
       "risk_dollars": 50.61,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
+      "planned_rr": 2,
       "realized_r": 1.905,
       "gross_pnl": 97.91,
       "spread_cost": 1.04,
@@ -6333,7 +6336,7 @@
       "outcome": "WIN",
       "exit_reason": "TAKE_PROFIT",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4160.40 \u2013 $4162.10",
+      "fvg_zone": "$4160.40 – $4162.10",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_HIGH_TP"
     },
@@ -6359,7 +6362,7 @@
       "position_lots": 0.0842,
       "risk_dollars": 51.09,
       "risk_pct": 0.5,
-      "planned_rr": 2.0,
+      "planned_rr": 2,
       "realized_r": -0.999,
       "gross_pnl": -48.36,
       "spread_cost": 1.68,
@@ -6372,7 +6375,7 @@
       "outcome": "LOSS",
       "exit_reason": "STOP_LOSS",
       "sweep_type": "Swing SSL Sweep + Bullish CHOCH/MSS",
-      "fvg_zone": "$4199.80 \u2013 $4202.40",
+      "fvg_zone": "$4199.80 – $4202.40",
       "htf_bias": "Bullish HTF",
       "intrabar_resolved_by": "BAR_LOW_SL"
     }
