@@ -4,6 +4,7 @@ import { GoogleGenAI, Type } from '@google/genai';
 import { FieldValue } from 'firebase-admin/firestore';
 import { adminDb, firebaseAdminReady, verifyIdToken } from '../firebaseAdmin.js';
 import * as oanda from './oanda.js';
+import * as twelveData from './twelvedata.js';
 import { summarizeTimeframe, isChoppy } from './indicators.js';
 import {
   DEFAULT_LIMITS, validateAiSignal, computePositionUnits, checkExecutionConditions,
@@ -83,6 +84,10 @@ const wrap = (handler, { staffOnly = false } = {}) => async (req, res) => {
 
 function sendError(res, err) {
   if (err instanceof HttpError) return res.status(err.status).json({ ok: false, error: err.message, ...(err.retryAfter ? { retryAfter: err.retryAfter } : {}) });
+  if (err instanceof twelveData.TwelveDataError) {
+    console.error('[trading] Twelve Data error:', err.status, err.message);
+    return res.status(err.status === 429 ? 429 : err.status === 400 ? 400 : 502).json({ ok: false, error: `Chart data error: ${err.message}` });
+  }
   if (err instanceof OandaError) {
     if (err.status === 429) return res.status(429).json({ ok: false, error: 'The broker is rate limiting requests. Wait a few seconds and try again.', retryAfter: err.retryAfter || 5 });
     console.error('[trading] OANDA error:', err.status, err.message);
@@ -548,18 +553,23 @@ const candleCache = new Map();
 const CHART_TFS = { M1: 'M1', M5: 'M5', M15: 'M15', H1: 'H1', H4: 'H4', D: 'D' };
 async function chartCandles(req, res) {
   try {
-    if (!oanda.oandaReady()) return res.status(503).json({ ok: false, error: 'Live chart data is not configured on the server.' });
+    const useOanda = oanda.oandaReady();
+    if (!useOanda && !twelveData.twelveDataReady()) return res.status(503).json({ ok: false, error: 'Live chart data is not configured on the server.' });
     const { pair, instrument } = resolvePair(req.query.pair);
     const tf = CHART_TFS[String(req.query.tf || 'M15').toUpperCase()];
     if (!tf) throw new HttpError(400, 'Unsupported timeframe.');
     const count = Math.min(500, Math.max(2, Number(req.query.count) || 300));
     const key = `${instrument}:${tf}:${count}`;
     const hit = candleCache.get(key);
-    if (hit && Date.now() - hit.at < 2000) return res.json(hit.value);
-    const [meta, candles] = await Promise.all([
-      oanda.getInstrument(instrument),
-      oanda.getCandles(instrument, tf, count, { includeIncomplete: true }),
-    ]);
+    // Twelve Data's free tier is rate limited (8/min), so cache longer than OANDA.
+    const ttl = useOanda ? 2000 : 15_000;
+    if (hit && Date.now() - hit.at < ttl) return res.json(hit.value);
+    const [meta, candles] = useOanda
+      ? await Promise.all([
+        oanda.getInstrument(instrument),
+        oanda.getCandles(instrument, tf, count, { includeIncomplete: true }),
+      ])
+      : [twelveData.getMeta(pair), await twelveData.getCandles(pair, tf, count)];
     const value = { ok: true, pair, tf, precision: meta.displayPrecision, pipSize: meta.pipSize, candles, serverTime: Date.now() };
     candleCache.set(key, { at: Date.now(), value });
     res.json(value);
