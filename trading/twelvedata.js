@@ -29,8 +29,17 @@ export class TwelveDataError extends Error {
   }
 }
 
+// Tolerate pasted whitespace, quotes or a "NAME=" prefix in the hosting dashboard.
+function apiKey() {
+  return String(process.env.TWELVEDATA_API_KEY || '')
+    .trim()
+    .replace(/^TWELVEDATA_API_KEY\s*=\s*/i, '')
+    .replace(/^["']|["']$/g, '')
+    .trim();
+}
+
 export function twelveDataReady() {
-  return Boolean(process.env.TWELVEDATA_API_KEY);
+  return Boolean(apiKey());
 }
 
 export function getMeta(pair) {
@@ -48,7 +57,7 @@ export async function getCandles(pair, tf, count = 300) {
     outputsize: String(count),
     timezone: 'UTC',
     order: 'ASC',
-    apikey: process.env.TWELVEDATA_API_KEY,
+    apikey: apiKey(),
   });
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 10_000);
