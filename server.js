@@ -12,7 +12,7 @@ import { registerAdminUserRoutes } from './adminUsers.js';
 import { registerOtpRoutes } from './otp.js';
 import { adminDb, firebaseAdminReady, verifyIdToken } from './firebaseAdmin.js';
 import { registerTradingRoutes } from './trading/routes.js';
-import { startAiScanner } from './trading/scanner.js';
+import { startAiScanner, getAiScannerStatus } from './trading/scanner.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -763,7 +763,7 @@ async function generateCalendarAnalysis(lang, highImpactEvents) {
 }
 
 app.get('/', (req, res) => {
-  res.json({ ok: true, service: 'genztrader-news-api', signalDataSource: 'tradingview', scannerRequiresBroker: false });
+  res.json({ ok: true, service: 'genztrader-news-api', signalDataSource: 'tradingview', scannerRequiresBroker: false, scanner: getAiScannerStatus() });
 });
 
 app.use('/api/payment', costlyLimiter);

@@ -29,6 +29,10 @@ const CFG = () => ({
 });
 
 let started = false;
+const heartbeat = { lastTickAt: null, consecutiveErrors: 0 };
+export function getAiScannerStatus() {
+  return { started, ...heartbeat };
+}
 
 export function scannerEnabled() {
   const flag = String(process.env.AI_SCANNER_ENABLED ?? 'true').toLowerCase();
@@ -244,6 +248,8 @@ export function startAiScanner() {
       }
     } finally {
       running = false;
+      heartbeat.lastTickAt = Date.now();
+      heartbeat.consecutiveErrors = state.consecutiveErrors;
       await persist();
     }
   };
@@ -260,5 +266,5 @@ export function startAiScanner() {
 
   const timer = setInterval(() => { if (!stopped) tick(); }, cfg.intervalMs);
   timer.unref?.();
-  return () => { stopped = true; clearInterval(timer); };
+  return () => { stopped = true; started = false; clearInterval(timer); };
 }
