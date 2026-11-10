@@ -763,7 +763,7 @@ async function generateCalendarAnalysis(lang, highImpactEvents) {
 }
 
 app.get('/', (req, res) => {
-  res.json({ ok: true, service: 'genztrader-news-api' });
+  res.json({ ok: true, service: 'genztrader-news-api', signalDataSource: 'tradingview', scannerRequiresBroker: false });
 });
 
 app.use('/api/payment', costlyLimiter);
@@ -1293,7 +1293,7 @@ app.get('/api/market/scanner', marketLimiter, async (req, res) => {
     'Pivot.M.Classic.R1|15', 'Pivot.M.Classic.R2|15', 'Pivot.M.Classic.R3|15',
     'Pivot.M.Classic.S1|15', 'Pivot.M.Classic.S2|15', 'Pivot.M.Classic.S3|15',
     'change', 'change_abs',
-    'close|5', 'high|5', 'low|5',
+    'close|5', 'high|5', 'low|5', 'EMA20|5',
   ];
 
   try {

@@ -5,6 +5,8 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { adminDb, firebaseAdminReady, verifyIdToken } from '../firebaseAdmin.js';
 import * as oanda from './oanda.js';
 import * as twelveData from './twelvedata.js';
+import { evaluateFeedConfluence, validateMarketFeedSignal } from './marketFeed.js';
+import { getScannerReadiness } from './scannerConfig.js';
 import { summarizeTimeframe, isChoppy } from './indicators.js';
 import {
   DEFAULT_LIMITS, validateAiSignal, computePositionUnits, checkExecutionConditions,
@@ -70,12 +72,12 @@ async function getAccess(req) {
   return { uid, staff, paid: staff || paid };
 }
 
-const wrap = (handler, { staffOnly = false } = {}) => async (req, res) => {
+const wrap = (handler, { staffOnly = false, requiresBroker = true } = {}) => async (req, res) => {
   try {
     const access = await getAccess(req);
     if (!access.paid) throw new HttpError(403, 'An active plan is required for AI trading.');
     if (staffOnly && !access.staff) throw new HttpError(403, 'Order execution is limited to the account owner.');
-    if (!oanda.oandaReady()) throw new HttpError(503, 'Broker connection is not configured on the server.');
+    if (requiresBroker && !oanda.oandaReady()) throw new HttpError(503, 'Broker connection is not configured on the server.');
     await handler(req, res, access);
   } catch (err) {
     sendError(res, err);
@@ -241,11 +243,42 @@ export async function produceSignal(pair, instrument) {
   return { base, signal: validated, atr15, precision: meta.displayPrecision };
 }
 
-export async function storePendingSignal({ uid, pair, instrument, signal, atr15, ttlSec = LIMITS.signalTtlSec, source = 'manual' }) {
+export async function produceMarketFeedSignal(snapshot, { requestAi = callAi, now = Date.now } = {}) {
+  const confirmation = evaluateFeedConfluence(snapshot);
+  const hold = reason => ({ signal: { direction: 'hold', confidence: 0, reason } });
+  if (confirmation.direction === 'hold') return hold(confirmation.reason);
+  if (now() - snapshot.marketTimestamp > 180000) return hold('Market snapshot expired before analysis.');
+  const prompt = [
+    `Analyse ${snapshot.pair} using ONLY this read-only market snapshot:`,
+    JSON.stringify(snapshot),
+    'These are current, possibly forming-bar indicators, not closed-candle history or executable bid/ask quotes.',
+    'No verified FVG, liquidity sweep, order block, spread or candle sequence is supplied. Do not claim those patterns.',
+    `Confirmed indicator direction: ${confirmation.direction}. Return that direction or hold; never the opposite.`,
+    `For a signal, anchor entry near the supplied price, put the stop beyond an available real pivot level, and target a supplied opposing pivot with at least 1:${LIMITS.minRr} reward:risk.`,
+    `Stop distance must be ${LIMITS.minSlAtr}-${LIMITS.maxSlAtr} x the supplied ATR. If the supplied levels cannot support the trade, return hold.`,
+    `Return hold when conviction is below ${LIMITS.minConfidence}. Confidence is a model assessment, not a measured win probability.`,
+    'Give a brief reason citing the actual indicator values and pivot levels used. Do not invent a missing level.',
+  ].join('\n');
+  let lastReason = 'AI returned an unreadable response.';
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const raw = await requestAi(prompt);
+    if (!raw) continue;
+    const result = validateMarketFeedSignal(raw, snapshot, LIMITS);
+    if (!result.ok) { lastReason = result.reason; continue; }
+    if (result.signal.direction !== 'hold' && result.signal.direction !== confirmation.direction) {
+      return hold('AI direction conflicts with the verified indicator trend.');
+    }
+    if (now() - snapshot.marketTimestamp > 180000) return hold('Market snapshot expired during AI analysis.');
+    return { signal: result.signal, atr15: snapshot.atr, precision: snapshot.precision };
+  }
+  return hold(`No trade: ${lastReason}`);
+}
+
+export async function storePendingSignal({ uid, pair, instrument, signal, atr15, ttlSec = LIMITS.signalTtlSec, source = 'manual', executionAllowed = true }) {
   const signalId = randomUUID();
   const expiresAt = Date.now() + ttlSec * 1000;
   await adminDb.collection(SIGNALS).doc(signalId).set({
-    uid, pair, instrument, ...signal, atr15, source, status: 'pending', createdAt: Date.now(), expiresAt,
+    uid, pair, instrument, ...signal, atr15, source, executionAllowed, status: 'pending', createdAt: Date.now(), expiresAt,
   });
   return { signalId, expiresAt };
 }
@@ -363,6 +396,7 @@ async function execute(req, res, access) {
     if (tradeSnap.exists) return { existing: tradeSnap.data() };
     if (!sigSnap.exists) throw new HttpError(404, 'Signal not found. Run the analysis again.');
     const sig = sigSnap.data();
+    if (sig.executionAllowed === false) throw new HttpError(403, 'This is a market-data signal only. It cannot be sent to a broker.');
     if (sig.uid !== access.uid && !(sig.uid === 'scanner' && access.staff)) throw new HttpError(403, 'This signal belongs to another user.');
     if (Date.now() > sig.expiresAt) throw new HttpError(410, 'This signal expired. Run the analysis again.');
     tx.set(tradeRef, {
@@ -502,7 +536,11 @@ async function latest(req, res) {
 
 async function scannerHealth(req, res) {
   const snap = await adminDb.collection('aiScannerState').doc('main').get();
-  res.json({ ok: true, scanner: snap.exists ? snap.data() : null });
+  res.json({
+    ok: true,
+    scanner: snap.exists ? snap.data() : null,
+    configuration: getScannerReadiness({ firebaseReady: firebaseAdminReady }),
+  });
 }
 
 async function status(req, res, access) {
@@ -586,8 +624,8 @@ export function registerTradingRoutes(app) {
   app.get('/api/trading/candles', rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: true, legacyHeaders: false, message: { ok: false, error: 'Too many requests.' } }), chartCandles);
   app.get('/api/trading/market', readLimiter, wrap(market));
   app.get('/api/trading/status', readLimiter, wrap(status));
-  app.get('/api/trading/latest', readLimiter, wrap(latest));
-  app.get('/api/trading/scanner', readLimiter, wrap(scannerHealth));
+  app.get('/api/trading/latest', readLimiter, wrap(latest, { requiresBroker: false }));
+  app.get('/api/trading/scanner', readLimiter, wrap(scannerHealth, { staffOnly: true, requiresBroker: false }));
   app.get('/api/trading/positions', readLimiter, wrap(positions, { staffOnly: true }));
   app.get('/api/trading/history', readLimiter, wrap(history, { staffOnly: true }));
   app.post('/api/trading/analyze', analyzeLimiter, wrap(analyze));

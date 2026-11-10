@@ -1,8 +1,8 @@
 // Always-on background AI signal scanner. Runs inside the server process (Railway), so signals
 // are produced whether or not anyone has the site open.
 //
-// Every tick (default 60s) it checks each pair for a newly CLOSED M15 candle. Each new candle is
-// analysed once; a trade signal (never "hold") is published to the site feed, pushed to member
+// Every tick (default 60s) it reads a fresh TradingView indicator snapshot. Each M15 slot is
+// analysed once (indicators can belong to a forming candle); a trade signal (never "hold") is published to the site feed, pushed to member
 // devices and (optionally) sent to Telegram. It only publishes signals — it never places orders.
 // Orders still require the owner's confirm click on the trade desk.
 //
@@ -12,8 +12,9 @@
 import { getMessaging } from 'firebase-admin/messaging';
 import { FieldValue } from 'firebase-admin/firestore';
 import { adminDb, firebaseAdminReady } from '../firebaseAdmin.js';
-import * as oanda from './oanda.js';
-import { produceSignal, storePendingSignal, LIMITS } from './routes.js';
+import { fetchMarketFeed, MARKET_FEED_PAIRS, validateMarketFeedSignal } from './marketFeed.js';
+import { produceMarketFeedSignal, storePendingSignal, LIMITS } from './routes.js';
+import { getScannerReadiness } from './scannerConfig.js';
 
 const STATE = () => adminDb.collection('aiScannerState');
 const dayKey = () => new Date().toISOString().slice(0, 10);
@@ -21,7 +22,7 @@ const num = (name, fb) => { const v = Number(process.env[name]); return Number.i
 
 const CFG = () => ({
   intervalMs: num('AI_SCAN_INTERVAL_SEC', 60) * 1000,
-  pairs: String(process.env.AI_SCAN_PAIRS || 'XAUUSD').split(',').map((p) => p.trim().toUpperCase()).filter((p) => oanda.TRADING_PAIRS[p]),
+  pairs: String(process.env.AI_SCAN_PAIRS || 'XAUUSD').split(',').map((p) => p.trim().toUpperCase()).filter((p) => MARKET_FEED_PAIRS[p]),
   cooldownMs: num('AI_SIGNAL_COOLDOWN_MIN', 60) * 60 * 1000,
   maxPerDay: num('AI_MAX_SIGNALS_PER_DAY', 6),
   signalTtlSec: num('AI_SCANNER_SIGNAL_TTL_MIN', 15) * 60,
@@ -54,7 +55,8 @@ async function publishToFeed(pair, signal, precision) {
     entry: signal.entry, sl: signal.stopLoss, tp: signal.takeProfit, rr: signal.riskReward,
     confidence: signal.confidence, reason: signal.reason, confluences: [signal.reason],
     timeframe: 'M15', style: 'daytrade', status: 'active',
-    source: 'PIP AI BACKGROUND SCANNER', isRealData: true, isRealAiGenerated: true,
+    source: 'PIP AI MARKET DATA SCANNER', executionAllowed: false, isRealData: true, isRealAiGenerated: true,
+    marketTimestamp: signal.marketTimestamp || Date.now(),
     createdAt: FieldValue.serverTimestamp(), publishedAt: Date.now(),
   });
   return id;
@@ -126,22 +128,18 @@ async function sendTelegram(pair, signal, precision) {
 // ---------------------------------------------------------------------------
 // Scan logic
 // ---------------------------------------------------------------------------
-async function newestClosedM15(instrument) {
-  const candles = await oanda.getCandles(instrument, 'M15', 2);
-  return candles.length ? candles[candles.length - 1].time : null;
-}
-
 async function scanPair(pair, cfg, state) {
-  const instrument = oanda.TRADING_PAIRS[pair];
+  const instrument = pair === 'XAUUSD' ? 'XAU_USD' : pair;
   const ps = (state.pairs[pair] ||= {});
   if (ps.pausedUntil && Date.now() < ps.pausedUntil) return;
 
-  const candleTime = await newestClosedM15(instrument);
+  const snapshot = await fetchMarketFeed(pair);
+  const candleTime = snapshot.candleTime;
   if (!candleTime || candleTime === ps.lastCandleTime) return; // nothing new since last analysis
 
   // Claim this candle atomically so a second instance (deploy overlap) skips it.
   try {
-    await STATE().doc(`claim_${pair}_${candleTime}`).create({ at: Date.now() });
+    await STATE().doc(`feed_claim_${pair}_${candleTime}`).create({ at: Date.now() });
   } catch (err) {
     if (err?.code === 6 || /ALREADY_EXISTS/i.test(String(err?.message))) { ps.lastCandleTime = candleTime; return; }
     throw err;
@@ -154,16 +152,26 @@ async function scanPair(pair, cfg, state) {
 
   let result;
   try {
-    result = await produceSignal(pair, instrument);
+    result = await produceMarketFeedSignal(snapshot);
   } catch (err) {
     if (err?.status === 429) { ps.pausedUntil = Date.now() + (err.retryAfter || 60) * 1000; ps.lastResult = 'ai-rate-limited'; ps.lastReason = err.message; return; }
     throw err;
   }
   const { signal, atr15, precision } = result;
+  signal.marketTimestamp = snapshot.marketTimestamp;
   ps.lastResult = signal.direction;
   ps.lastReason = signal.reason;
   ps.lastConfidence = signal.confidence;
   if (signal.direction === 'hold') return;
+
+  const currentSnapshot = await fetchMarketFeed(pair);
+  const recheck = validateMarketFeedSignal(signal, currentSnapshot, LIMITS);
+  if (!recheck.ok || recheck.signal.direction === 'hold') {
+    ps.lastResult = 'skipped-price-recheck';
+    ps.lastReason = recheck.reason || recheck.signal.reason;
+    return;
+  }
+  signal.marketTimestamp = currentSnapshot.marketTimestamp;
 
   if (ps.signalsToday >= cfg.maxPerDay) { ps.lastResult = 'skipped-daily-cap'; return; }
   if (ps.lastSignalDirection === signal.direction && Date.now() - (ps.lastSignalAt || 0) < cfg.cooldownMs) { ps.lastResult = 'skipped-cooldown'; return; }
@@ -179,7 +187,7 @@ async function scanPair(pair, cfg, state) {
   });
   if (nearDuplicate) { ps.lastResult = 'skipped-duplicate-level'; return; }
 
-  const { signalId } = await storePendingSignal({ uid: 'scanner', pair, instrument, signal, atr15, ttlSec: cfg.signalTtlSec, source: 'scanner' });
+  const { signalId } = await storePendingSignal({ uid: 'scanner', pair, instrument, signal, atr15, ttlSec: cfg.signalTtlSec, source: 'market-feed-scanner', executionAllowed: false });
   ps.lastSignalAt = Date.now();
   ps.lastSignalDirection = signal.direction;
   ps.lastSignalId = signalId;
@@ -199,14 +207,12 @@ async function scanPair(pair, cfg, state) {
 export function startAiScanner() {
   if (started) return () => {};
   if (!scannerEnabled()) { console.log('[AI Scanner] Disabled by AI_SCANNER_ENABLED.'); return () => {}; }
-  const missing = [];
-  if (!firebaseAdminReady) missing.push('FIREBASE_SERVICE_ACCOUNT_JSON');
-  if (!oanda.oandaReady()) missing.push('OANDA_API_KEY/OANDA_ACCOUNT_ID');
-  if (!process.env.GEMINI_API_KEY) missing.push('GEMINI_API_KEY');
+  const { missing } = getScannerReadiness({ firebaseReady: firebaseAdminReady });
   if (missing.length) { console.warn(`[AI Scanner] Not started, missing: ${missing.join(', ')}`); return () => {}; }
   started = true;
 
   const cfg = CFG();
+  if (!cfg.pairs.length) { started = false; console.warn('[AI Scanner] No supported feed pairs configured. Use AI_SCAN_PAIRS=XAUUSD.'); return () => {}; }
   const state = { startedAt: Date.now(), pairs: {}, consecutiveErrors: 0 };
   let running = false;
   let runningSince = 0;
@@ -215,7 +221,7 @@ export function startAiScanner() {
   const persist = () => STATE().doc('main').set({
     startedAt: state.startedAt, lastTickAt: Date.now(), lastError: state.lastError || null,
     lastErrorAt: state.lastErrorAt || null, consecutiveErrors: state.consecutiveErrors,
-    pairs: state.pairs, intervalSec: cfg.intervalMs / 1000, minConfidence: LIMITS.minConfidence,
+    dataSource: 'TradingView scanner', signalOnly: true, pairs: state.pairs, intervalSec: cfg.intervalMs / 1000, minConfidence: LIMITS.minConfidence,
   }, { merge: true }).catch((e) => console.warn('[AI Scanner] Could not save heartbeat:', e.message));
 
   const tick = async () => {
